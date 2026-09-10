@@ -6,7 +6,7 @@
 
 const featureCopy = [
   {t:'Trip planning', d:'How to get there, when to go, and what to see on the way — one card per destination.'},
-  {t:'Crowd management', d:'Alerts when your pick is packed, with quieter nearby spots suggested automatically.'},
+  {t:'Crowd detection', d:'Expected crowd levels, peak-hour patterns and quieter visit windows for your destination.'},
   {t:'Expense calculator', d:'Give a budget and headcount, get a realistic stay / travel / food / activity split.'},
   {t:'Peak hour insight', d:'A 24-hour density chart so you know exactly when to show up.'},
   {t:'Weather advisory', d:'A clear go / wait / reroute call whenever conditions turn against your plans.'},
@@ -83,13 +83,18 @@ function renderQuickPanel(id){
   panel.innerHTML = `
     <div class="qp-head">
       <div><h3>${d.name}</h3><div class="region">${d.region}</div></div>
-      <span class="crowd-badge crowd-${d.crowd}"><span class="crowd-dot"></span>${d.crowd.charAt(0).toUpperCase()+d.crowd.slice(1)} crowd right now</span>
+      <span class="crowd-badge crowd-${d.crowd}"><span class="crowd-dot"></span>Typical ${d.crowd} crowd</span>
     </div>
     <div class="qp-grid">
       <div class="qp-item"><div class="k">Best time to visit</div><div class="v">${d.bestTime}</div></div>
       <div class="qp-item"><div class="k">Quietest hour</div><div class="v">${bestHourIdx.toString().padStart(2,'0')}:00 (${minVal}%)</div></div>
       <div class="qp-item"><div class="k">Getting there</div><div class="v">${d.modes.join(', ')}</div></div>
       <div class="qp-item"><div class="k">Today's weather</div><div class="v">${d.weather.temp}°C, ${d.weather.cond}</div></div>
+    </div>
+    <div class="qp-places">
+      <div class="qp-places-head">Best places in ${d.name}</div>
+      <div class="qp-places-grid">${d.connecting.map(place=>`
+        <div class="qp-place"><div class="place-photo-wrap"><img class="place-photo" data-place-photo="${place.name}" alt="${place.name}"></div><div><strong>${place.name}</strong><span>${place.dist} away · ${place.time}</span></div><p>${place.desc}</p></div>`).join('')}</div>
     </div>
     <div class="qp-actions">
       <button class="qp-btn primary" onclick="navigateTo('planner')">View full trip plan</button>
@@ -98,6 +103,7 @@ function renderQuickPanel(id){
       <button class="qp-btn" onclick="navigateTo('weather')">Weather advisory</button>
     </div>
   `;
+  loadPlacePhotos(panel);
   panel.classList.add('show');
   panel.scrollIntoView({behavior:'smooth', block:'center'});
 }

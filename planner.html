@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trip Planner — Rahi</title>
+<title>Trip Planner — TouriSense</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -13,7 +13,7 @@
 <header class="site-header">
   <div class="header-inner">
     <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
-    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Ra<span>hi</span></span></div>
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Touri<span>Sense</span></span></div>
     <nav class="navlinks" id="navlinks">
       <button data-view="home">Home</button>
       <button data-view="planner">Trip Planner</button>
@@ -28,7 +28,7 @@
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <div class="mobile-drawer" id="mobileDrawer">
   <div class="drawer-head">
-    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Ra<span>hi</span></span></div>
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Touri<span>Sense</span></span></div>
     <button class="drawer-close" id="drawerClose">✕</button>
   </div>
   <nav class="drawer-nav" id="drawerNav">
@@ -48,6 +48,12 @@
       <p class="section-desc">Pick a destination to see how to get there, the best months to go, and what's worth visiting along the way.</p>
     </div>
     <div class="dest-scroller" id="planner-chips"></div>
+    <div class="trip-tools card" id="trip-tools">
+      <div class="trip-tools-head"><div><h3>Personalise this trip</h3><p>Choose interests, a travel date and optional preferences to focus your itinerary.</p></div><button class="location-tool-btn" id="planner-location-btn" type="button">⌖ Use my location</button></div>
+      <div class="trip-tool-fields"><label>Trip date<input id="trip-date" type="date"></label><label>Travel preference<select id="trip-style"><option value="balanced">Balanced</option><option value="budget">Budget-conscious</option><option value="comfort">Comfort-focused</option></select></label><label class="trip-constraint">Anything to consider?<input id="trip-constraint" type="text" maxlength="120" placeholder="e.g. avoid long walks, vegetarian food"></label></div>
+      <div class="interest-row"><span>Interests</span><div id="interest-filters" class="interest-filters"></div></div>
+      <p class="trip-location-note" id="planner-location-note">Your location stays in this browser and is only used to calculate attraction distances.</p>
+    </div>
     <div class="planner-grid">
       <div class="card" id="planner-detail"></div>
       <div class="side-stack"><div class="card" id="planner-selected-mode"></div></div>
@@ -76,7 +82,7 @@
 
 <footer>
   <div class="wrap footer-inner">
-    <p>Rahi — SIH prototype. All crowd, weather and pricing data shown is simulated for demo purposes.</p>
+    <p>TouriSense — SIH prototype. All crowd, weather and pricing data shown is simulated for demo purposes.</p>
     <p>Built with the frontend, wired for a live backend.</p>
   </div>
 </footer>

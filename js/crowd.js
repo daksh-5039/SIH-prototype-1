@@ -6,9 +6,6 @@
    ============================================================ */
 
 let peakChartInstance = null;
-let unsubscribeCrowdReports = null;
-let liveCrowdTimer = null;
-const CROWD_REPORT_WINDOW_MS = 30 * 60 * 1000;
 
 /* ============ CROWD + PEAK HOUR VIEW ============ */
 function renderCrowd(){
@@ -28,66 +25,35 @@ function renderCrowdDetail(){
       scales:{ x:{ticks:{color:'#6b7280',font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:8}, grid:{display:false}},
                y:{ticks:{color:'#6b7280',font:{size:10}}, grid:{color:'#e6e8ef'}, max:100} } }
   });
-  document.getElementById('crowd-chart-note').textContent = `${d.name} — historical hourly pattern. The live status uses recent visitor reports.`;
+  document.getElementById('crowd-chart-note').textContent = `${d.name} — expected visitor density by hour, calculated from the destination's historical footfall pattern.`;
   const minVal = Math.min(...d.hourly);
   const bestHourIdx = d.hourly.indexOf(minVal);
   document.getElementById('best-hour-pill').textContent = `Quietest around ${bestHourIdx.toString().padStart(2,'0')}:00 — ${minVal}% capacity`;
 
   document.getElementById('crowd-status').innerHTML = `
-    <h4>Live community status</h4>
-    <div id="live-crowd-read"><span class="crowd-badge crowd-medium"><span class="crowd-dot"></span>Loading recent reports…</span></div>
-    <p class="crowd-source-note">Based only on signed-in visitor reports from the last 30 minutes. One active report per traveller.</p>
-    <div class="crowd-report-box">
-      <strong>Are you at ${d.name} now?</strong>
-      <p>Help other travellers by reporting what you see.</p>
-      <div class="crowd-report-actions">
-        <button data-level="low">Not busy</button><button data-level="medium">Moderate</button><button data-level="high">Very busy</button>
-      </div>
-      <p class="crowd-report-note" id="crowd-report-note"></p>
-    </div>
+    <h4>Expected crowd now</h4>
+    <div id="crowd-forecast-read"></div>
+    <p class="crowd-source-note">Free historical-footfall forecast, not a live sensor/camera count. It updates automatically for the current local hour.</p>
+    <div class="crowd-forecast-box" id="crowd-forecast-box"></div>
   `;
-  document.querySelectorAll('.crowd-report-actions button').forEach(button => {
-    button.addEventListener('click', () => submitCrowdReport(d, button.dataset.level));
-  });
-  subscribeToLiveCrowd(d);
+  renderCrowdForecast(d);
 }
 
-function subscribeToLiveCrowd(d){
-  if(unsubscribeCrowdReports) unsubscribeCrowdReports();
-  unsubscribeCrowdReports = window.rahiApi?.subscribeCrowd(d.id, reports => renderLiveCrowdRead(d, reports));
-  if(!unsubscribeCrowdReports) renderLiveCrowdRead(d, []);
-}
-
-function renderLiveCrowdRead(d, reports){
-  if(getCurrentDest() !== d.id) return;
-  if(liveCrowdTimer) clearTimeout(liveCrowdTimer);
-  const now = Date.now();
-  const active = reports.filter(report => report.reportedAt?.toDate && now - report.reportedAt.toDate().getTime() <= CROWD_REPORT_WINDOW_MS);
-  const read = document.getElementById('live-crowd-read');
-  if(!read) return;
-  if(active.length === 0){
-    read.innerHTML = `<span class="crowd-badge crowd-medium"><span class="crowd-dot"></span>No recent traveller reports</span><p class="live-read-detail">Be the first verified traveller to report current conditions.</p>`;
-    return;
-  }
-  const weights = {low:1, medium:2, high:3};
-  const average = active.reduce((sum, report) => sum + weights[report.level], 0) / active.length;
-  const level = average < 1.66 ? 'low' : average < 2.34 ? 'medium' : 'high';
-  const label = {low:'Low crowd', medium:'Moderate crowd', high:'High crowd'}[level];
-  const latest = Math.max(...active.map(report => report.reportedAt.toDate().getTime()));
-  const minutes = Math.max(0, Math.floor((now - latest) / 60000));
-  read.innerHTML = `<span class="crowd-badge crowd-${level}"><span class="crowd-dot"></span>${label} right now</span><p class="live-read-detail">${active.length} recent report${active.length===1?'':'s'} · last update ${minutes === 0 ? 'just now' : `${minutes} min ago`}</p>`;
-  const nextExpiry = Math.min(...active.map(report => report.reportedAt.toDate().getTime() + CROWD_REPORT_WINDOW_MS));
-  liveCrowdTimer = setTimeout(() => renderLiveCrowdRead(d, reports), Math.max(1000, nextExpiry - Date.now() + 50));
-}
-
-async function submitCrowdReport(d, level){
-  const note = document.getElementById('crowd-report-note');
-  if(!window.rahiApi?.currentUser()) { window.rahiApi?.requireUser(); return; }
-  note.textContent = 'Saving your live report…';
-  try {
-    await window.rahiApi.reportCrowd(d.id, level);
-    note.textContent = 'Thanks—your report is live for the next 30 minutes.';
-  } catch(error) {
-    note.textContent = 'Could not save your report. Please try again.';
-  }
+function renderCrowdForecast(d){
+  const hour = new Date().getHours();
+  const expected = d.hourly[hour];
+  const average = Math.round(d.hourly.reduce((sum, value) => sum + value, 0) / d.hourly.length);
+  const peak = Math.max(...d.hourly);
+  const peakHour = d.hourly.indexOf(peak);
+  const quiet = Math.min(...d.hourly);
+  const quietHour = d.hourly.indexOf(quiet);
+  const level = expected >= 70 ? 'high' : expected >= 40 ? 'medium' : 'low';
+  const label = level === 'high' ? 'High expected crowd' : level === 'medium' ? 'Moderate expected crowd' : 'Low expected crowd';
+  const read = document.getElementById('crowd-forecast-read');
+  const box = document.getElementById('crowd-forecast-box');
+  if(read) read.innerHTML = `<span class="crowd-badge crowd-${level}"><span class="crowd-dot"></span>${label}</span><p class="live-read-detail">${String(hour).padStart(2,'0')}:00 forecast: ${expected}% typical capacity</p>`;
+  if(box) box.innerHTML = `
+    <div><span>All-day average</span><strong>${average}% capacity</strong></div>
+    <div><span>Quietest window</span><strong>${String(quietHour).padStart(2,'0')}:00 · ${quiet}%</strong></div>
+    <div><span>Typical peak</span><strong>${String(peakHour).padStart(2,'0')}:00 · ${peak}%</strong></div>`;
 }

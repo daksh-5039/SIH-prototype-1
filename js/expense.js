@@ -53,8 +53,10 @@ async function saveExpensePlan(){
   const estimatedCost = Math.round(3200 * {budget:0.75, balanced:1, comfort:1.4}[style] * destCostIndex(d.id) * days * people);
   const note = document.getElementById('save-expense-note');
   try {
-    await window.rahiApi.saveExpense({ destinationId:d.id, destinationName:d.name, days, people, budget, style, estimatedCost });
+    const hourly = d.hourly, quiet = Math.min(...hourly), peak = Math.max(...hourly);
+    const crowdSnapshot = { expectedAtSave:hourly[new Date().getHours()], average:Math.round(hourly.reduce((sum,value)=>sum+value,0)/hourly.length), quietHour:hourly.indexOf(quiet), quiet, peakHour:hourly.indexOf(peak), peak };
+    await window.rahiApi.saveExpense({ destinationId:d.id, destinationName:d.name, days, people, budget, style, estimatedCost, weatherSnapshot:{...d.weather}, crowdSnapshot });
     note.textContent = 'Saved to your profile.';
   } catch(error) { if(window.rahiApi.currentUser()) note.textContent = 'Could not save this budget. Please try again.'; }
 }
-function destCostIndex(id){ const idx = {taj:1.1, jaipur:1.0, goa:1.25, kerala:1.15, manali:1.05, varanasi:0.85}; return idx[id] || 1; }
+function destCostIndex(id){ const idx = {taj:1.1, jaipur:1.0, bhopal:0.9, goa:1.25, kerala:1.15, manali:1.05, varanasi:0.85}; return idx[id] || 1; }

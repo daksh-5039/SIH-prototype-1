@@ -13,7 +13,7 @@ function addBubble(role, text){
 function setChatWelcome(){
   const container = document.getElementById('chat-messages');
   container.innerHTML = '';
-  addBubble('assistant', 'Hello! I am Rahi Smart Assistant. Tell me your destination, days, travellers and budget, or ask me to use a saved plan from your profile. I will create a full trip roadmap, budget split and travel suggestions.');
+  addBubble('assistant', 'Hello! I am TouriSense Smart Assistant. Tell me your destination, days, travellers and budget, or ask me to use a saved plan from your profile. I will create a full trip roadmap, budget split and travel suggestions.');
 }
 async function loadChat(chatId){
   activeChatId = chatId;

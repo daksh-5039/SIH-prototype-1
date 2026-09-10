@@ -42,7 +42,7 @@
     if (header && !document.getElementById('auth-area')) header.insertAdjacentHTML('beforeend', '<div id="auth-area" class="auth-area"></div>');
     document.body.insertAdjacentHTML('beforeend', `
       <div class="auth-modal" id="auth-modal" aria-hidden="true"><div class="auth-dialog" role="dialog" aria-modal="true" aria-label="Account">
-        <button class="auth-close" id="auth-close" aria-label="Close">×</button><h3>Travel with Rahi</h3>
+        <button class="auth-close" id="auth-close" aria-label="Close">×</button><h3>Travel with TouriSense</h3>
         <p>Sign in to publish reviews and save your itinerary.</p>
         <input id="auth-email" type="email" placeholder="Email address" autocomplete="email">
         <input id="auth-password" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">

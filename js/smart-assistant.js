@@ -1,13 +1,13 @@
 /*
  * Free, private, rule-based trip assistant.
- * It runs entirely in the browser using the destination data already in Rahi.
+ * It runs entirely in the browser using the destination data already in TouriSense.
  * No generative-AI provider, secret key, Cloud Function, or paid service is used.
  */
 (function(){
   const money = n => `₹${Math.round(n).toLocaleString('en-IN')}`;
   const title = text => text.replace(/\b\w/g, letter => letter.toUpperCase());
   // Kept here (rather than relying on expense.js) because this page loads independently.
-  const destinationCostIndex = id => ({taj:1.1, jaipur:1.0, goa:1.25, kerala:1.15, manali:1.05, varanasi:0.85}[id] || 1);
+  const destinationCostIndex = id => ({taj:1.1, jaipur:1.0, bhopal:0.9, goa:1.25, kerala:1.15, manali:1.05, varanasi:0.85}[id] || 1);
   function explicitDestination(text){
     const query = text.toLowerCase();
     return destinations.find(d => query.includes(d.id) || query.includes(d.name.toLowerCase()) || query.includes(d.name.split(',')[0].toLowerCase()))
@@ -46,7 +46,7 @@
   function focusedAnswer(intent, d, days, people, budget, style){
     if(intent === 'transport') return `TRAVEL OPTIONS FOR ${d.name.toUpperCase()}\n\n${d.travelOptions.map((option, index) => `${index+1}. ${option.mode}: ${option.duration} · ${option.cost}\n${option.desc}`).join('\n\n')}\n\nFor your ${days}-day trip, choose the option that preserves the most sightseeing time while staying within ${budget ? money(budget) : 'your budget'}.`;
     if(intent === 'places') return `TOP PLACES FOR ${d.name.toUpperCase()}\n\n${d.connecting.map((place, index) => `${index+1}. ${place.name} — ${place.dist} · allow ${place.time}\n${place.desc}`).join('\n\n')}\n\nFor ${days} day${days===1?'':'s'}, prioritise the first ${Math.min(days, d.connecting.length)} place${days===1?'':'s'} and leave buffer time for travel.`;
-    if(intent === 'weather') return `WEATHER & TIMING — ${d.name.toUpperCase()}\n\nCurrent destination read: ${d.weather.temp}°C, ${d.weather.cond}; rain chance ${d.weather.rain}%. ${d.weather.advice === 'warn' ? 'Plan a flexible indoor alternative, carry rain protection, and leave extra transfer time.' : 'Start outdoor sightseeing early and carry water/sun protection.'}\n\nBest travel season in Rahi: ${d.bestTime}. Check the Weather Advisory page just before travel for the live API update.`;
+    if(intent === 'weather') return `WEATHER & TIMING — ${d.name.toUpperCase()}\n\nCurrent destination read: ${d.weather.temp}°C, ${d.weather.cond}; rain chance ${d.weather.rain}%. ${d.weather.advice === 'warn' ? 'Plan a flexible indoor alternative, carry rain protection, and leave extra transfer time.' : 'Start outdoor sightseeing early and carry water/sun protection.'}\n\nBest travel season in TouriSense: ${d.bestTime}. Check the Weather Advisory page just before travel for the live API update.`;
     if(intent === 'packing') return `PACKING FOR ${d.name.toUpperCase()}\n\nEssentials: government ID, booking copies, charger/power bank, payment backup, reusable bottle, comfortable footwear and basic medicines.\n\nDestination tip: ${d.weather.advice === 'warn' ? 'pack a rain jacket/waterproof cover and a warm layer if travelling in the evening.' : 'pack a light layer, sunscreen/cap and breathable clothing.'}\n\nFor a ${days}-day trip, pack outfits for ${days} days plus one flexible layer instead of overpacking.`;
     if(intent === 'crowd') return `CROWD ADVICE — ${d.name.toUpperCase()}\n\nThe historical pattern suggests the quietest period is around ${String(d.hourly.indexOf(Math.min(...d.hourly))).padStart(2,'0')}:00. Do not treat that as a live reading. Open Crowd & Peak Hours before leaving to see recent traveller reports, then plan your visit around the live status.`;
     return tripAnswer('', d, days, people, budget, style);
@@ -71,7 +71,7 @@ Array.from({length:days}, (_, i) => {
 }).join('\n') + `\n\n3. ESTIMATED BUDGET\nTotal: ${money(cost)}\nStay: ${money(stay)} · Travel: ${money(travel)} · Food: ${money(food)} · Activities: ${money(activities)}\n${budgetNote}\n\n`+
 `4. WEATHER & TIMING\nTypical current local read: ${avg.temp}°C, ${avg.cond}. ${avg.advice==='warn' ? 'Keep a flexible indoor backup, rain protection, and extra transfer time.' : 'Conditions are generally suitable for sightseeing; start outdoor visits early.'}\nUse the Crowd page for recent community reports before leaving.\n\n`+
 `5. PACKING CHECKLIST\nGovernment ID, booking copies, power bank, reusable water bottle, comfortable footwear, basic medicines, weather-appropriate layer/rain cover, and cash plus digital payment backup.\n\n`+
-`Note: This is a free rule-based planning recommendation based on Rahi’s destination data and estimates. Confirm live prices, operating hours, weather, permits, and safety guidance before travel.`;
+`Note: This is a free rule-based planning recommendation based on TouriSense’s destination data and estimates. Confirm live prices, operating hours, weather, permits, and safety guidance before travel.`;
   }
   function reply(message, profile, history){
     const text = message.toLowerCase();

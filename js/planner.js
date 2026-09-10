@@ -9,10 +9,44 @@ const selectedMode = {};   // destId -> mode name
 const addedPlaces = {};    // destId -> Set of place names
 const reviewDraft = {};    // destId -> current star rating being picked
 const remoteReviews = {};  // Firestore reviews grouped by destination
+const selectedInterests = new Set(['all']);
+const placeCategories = {
+  'Agra Fort':['history','culture'],'Fatehpur Sikri':['history','culture'],'Mehtab Bagh':['nature','culture'],
+  'Amber Fort':['history','culture'],'Nahargarh Fort':['history','nature'],'Chokhi Dhani':['culture','food'],
+  'Upper Lake (Bhojtal)':['nature','family'],'Van Vihar National Park':['nature','family'],'Sanchi Stupa':['history','culture','spiritual'],
+  'Baga Beach':['nature','food'],'Old Goa Churches':['history','culture','spiritual'],'Dudhsagar Falls':['nature'],
+  'Alleppey Beach':['nature'],'Kumarakom Sanctuary':['nature'],'Vembanad Lake':['nature','family'],
+  'Solang Valley':['nature','family'],'Old Manali':['culture','food'],'Rohtang Pass':['nature'],
+  'Dashashwamedh Ghat':['culture','spiritual'],'Sarnath':['history','spiritual'],'Ramnagar Fort':['history','culture']
+};
+const interestLabels = {all:'All',nature:'🌿 Nature',history:'🏛 History',culture:'🎭 Culture',food:'🍲 Food',family:'👨‍👩‍👧 Family',spiritual:'🛕 Spiritual'};
 
 function renderPlanner(){
   renderChips('planner-chips', renderPlannerAll);
+  initTripTools();
   renderPlannerAll();
+}
+function initTripTools(){
+  const date = document.getElementById('trip-date');
+  if(!date.value) date.value = new Date().toISOString().slice(0,10);
+  document.getElementById('interest-filters').innerHTML = Object.entries(interestLabels).map(([id,label]) => `<button type="button" class="interest-chip ${id==='all'?'active':''}" data-interest="${id}">${label}</button>`).join('');
+  document.getElementById('interest-filters').addEventListener('click', event => {
+    const button = event.target.closest('button[data-interest]'); if(!button) return;
+    const interest = button.dataset.interest;
+    if(interest === 'all'){ selectedInterests.clear(); selectedInterests.add('all'); }
+    else { selectedInterests.delete('all'); selectedInterests.has(interest) ? selectedInterests.delete(interest) : selectedInterests.add(interest); if(!selectedInterests.size) selectedInterests.add('all'); }
+    document.querySelectorAll('.interest-chip').forEach(chip => chip.classList.toggle('active', selectedInterests.has(chip.dataset.interest)));
+    renderConnectingGrid(destinations.find(x=>x.id===getCurrentDest()));
+  });
+  document.getElementById('planner-location-btn').addEventListener('click', () => {
+    const note = document.getElementById('planner-location-note');
+    if(!navigator.geolocation){ note.textContent = 'Location is not available in this browser.'; return; }
+    note.textContent = 'Requesting your location…';
+    navigator.geolocation.getCurrentPosition(() => { note.textContent = 'Location enabled. Open a place card and select “Show distance from me”.'; }, () => { note.textContent = 'Location permission was not granted. Destination-centre distances are still shown.'; }, {enableHighAccuracy:false,timeout:10000});
+  });
+  ['trip-date','trip-style','trip-constraint'].forEach(id => document.getElementById(id).addEventListener('input', () => {
+    renderSelectedModeCard(destinations.find(x=>x.id===getCurrentDest()));
+  }));
 }
 function renderPlannerAll(){
   const d = destinations.find(x=>x.id===getCurrentDest());
@@ -32,13 +66,14 @@ function renderPlannerDetail(d){
     <p style="color:var(--text-soft);font-size:14px;">${d.travelNote}</p>
     <div class="dest-meta-grid">
       <div class="meta-block"><div class="k">Best time to visit</div><div class="v">${d.bestTime}</div></div>
-      <div class="meta-block"><div class="k">Current crowd read</div><div style="margin-top:2px;"><span class="crowd-badge crowd-${d.crowd}"><span class="crowd-dot"></span>${d.crowd.charAt(0).toUpperCase()+d.crowd.slice(1)}</span></div></div>
+      <div class="meta-block"><div class="k">Typical crowd level</div><div style="margin-top:2px;"><span class="crowd-badge crowd-${d.crowd}"><span class="crowd-dot"></span>${d.crowd.charAt(0).toUpperCase()+d.crowd.slice(1)}</span></div></div>
     </div>
   `;
 }
 function renderSelectedModeCard(d){
   const opt = d.travelOptions.find(o=>o.mode===selectedMode[d.id]);
   const added = addedPlaces[d.id];
+  const selectedPlaces = d.connecting.filter(place => added.has(place.name));
   document.getElementById('planner-selected-mode').innerHTML = `
     <h4>Your trip snapshot</h4>
     <div class="meta-block" style="margin-bottom:16px;">
@@ -51,8 +86,9 @@ function renderSelectedModeCard(d){
       <div class="k">Places added to plan</div>
       ${added.size===0
         ? `<div style="font-size:13px;color:var(--text-soft);margin-top:6px;">None yet — tap a nearby place below to add it.</div>`
-        : `<ul class="connecting-list" style="margin-top:8px;">${[...added].map(n=>`<li><span class="conn-name">${n}</span></li>`).join('')}</ul>`}
+        : `<ul class="connecting-list" style="margin-top:8px;">${[...added].map(n=>`<li><span class="conn-name">${n}</span></li>`).join('')}</ul><a class="route-plan-btn" href="${googleMapsDirectionsUrl(selectedPlaces)}" target="_blank" rel="noopener noreferrer">Open selected route in Google Maps ↗</a>`}
     </div>
+    <div class="trip-settings-summary"><span>${document.getElementById('trip-date')?.value || 'Date not set'}</span><span>${document.getElementById('trip-style')?.value || 'balanced'} trip</span>${document.getElementById('trip-constraint')?.value ? `<span>${escapeHtml(document.getElementById('trip-constraint').value)}</span>` : ''}</div>
     <button class="save-trip-btn" onclick="savePlannerTrip('${d.id}')">Save this itinerary</button>
     <p class="save-trip-note" id="save-trip-note"></p>
   `;
@@ -61,9 +97,15 @@ async function savePlannerTrip(destId){
   const d = destinations.find(x=>x.id===destId);
   const note = document.getElementById('save-trip-note');
   try {
-    await window.rahiApi.saveTrip({destinationId:d.id, destinationName:d.name, travelMode:selectedMode[d.id], places:[...addedPlaces[d.id]]});
+    await window.rahiApi.saveTrip({destinationId:d.id, destinationName:d.name, travelMode:selectedMode[d.id], places:[...addedPlaces[d.id]], tripDate:document.getElementById('trip-date')?.value || null, travelStyle:document.getElementById('trip-style')?.value || 'balanced', constraints:document.getElementById('trip-constraint')?.value.trim() || '', interests:[...selectedInterests].filter(x=>x!=='all'), weatherSnapshot:{...d.weather}, crowdSnapshot:createCrowdSnapshot(d)});
     note.textContent = 'Saved to your account.';
   } catch (error) { if (note && window.rahiApi.currentUser()) note.textContent = error.message; }
+}
+function createCrowdSnapshot(d){
+  const hourly = d.hourly;
+  const average = Math.round(hourly.reduce((sum,value)=>sum+value,0)/hourly.length);
+  const quiet = Math.min(...hourly), peak = Math.max(...hourly);
+  return { expectedAtSave:hourly[new Date().getHours()], average, quietHour:hourly.indexOf(quiet), quiet, peakHour:hourly.indexOf(peak), peak };
 }
 
 const travelIcons = {
@@ -95,19 +137,28 @@ function renderTravelOptions(d){
 }
 
 function renderConnectingGrid(d){
-  document.getElementById('conn-grid').innerHTML = d.connecting.map((c,i)=>`
+  const visiblePlaces = d.connecting.filter(c => selectedInterests.has('all') || placeCategories[c.name]?.some(category => selectedInterests.has(category)));
+  document.getElementById('conn-grid').innerHTML = visiblePlaces.length ? visiblePlaces.map(c=>{
+    const i = d.connecting.indexOf(c); const tags = (placeCategories[c.name] || []).map(tag => `<span>${interestLabels[tag].replace(/^.+?\s/,'')}</span>`).join('');
+    return `
     <div class="conn-card" data-idx="${i}">
+      <div class="place-photo-wrap conn-photo-wrap"><img class="place-photo conn-photo" data-place-photo="${c.name}" alt="${c.name}"></div>
       <div class="cc-top">
         <div><div class="cc-name">${c.name}</div><div class="cc-dist">${c.dist} away</div></div>
         <svg class="cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
+      <div class="conn-card-hint">View map, distance &amp; visit details</div>
+      <div class="place-tags">${tags}</div>
       <div class="cc-body"><div class="cc-body-inner">
         <span class="cc-time">${c.time}</span>
         <p class="cc-desc">${c.desc}</p>
+        <div class="place-map"><a href="${googleMapsUrl(c)}" target="_blank" rel="noopener noreferrer" title="Open ${c.name} in Google Maps"><iframe src="${mapEmbedUrl(c.coords)}" loading="lazy" tabindex="-1" title="Map showing ${c.name}"></iframe><span>Open in Google Maps ↗</span></a></div>
+        <div class="place-distance"><button type="button" class="distance-btn" data-idx="${i}">Show distance from me</button><p class="distance-result">Destination-centre distance: ${c.dist}</p></div>
         <button class="cc-add ${addedPlaces[d.id].has(c.name)?'added':''}" data-name="${c.name}">${addedPlaces[d.id].has(c.name)?'✓ Added to plan':'+ Add to plan'}</button>
       </div></div>
     </div>
-  `).join('');
+  `}).join('') : `<div class="no-place-match">No attractions match these interests yet. Select “All” to see every place.</div>`;
+  loadPlacePhotos(document.getElementById('conn-grid'));
   document.querySelectorAll('#conn-grid .conn-card').forEach(card=>{
     card.addEventListener('click', e=>{
       if(e.target.closest('.cc-add')){
@@ -118,7 +169,15 @@ function renderConnectingGrid(d){
         renderSelectedModeCard(d);
         return;
       }
-      card.classList.toggle('expanded');
+      const willOpen = !card.classList.contains('expanded');
+      document.querySelectorAll('#conn-grid .conn-card.expanded').forEach(openCard => openCard.classList.remove('expanded'));
+      if(willOpen) card.classList.add('expanded');
+    });
+  });
+  document.querySelectorAll('#conn-grid .distance-btn').forEach(button=>{
+    button.addEventListener('click', event=>{
+      event.stopPropagation();
+      showDistanceFromUser(button, d.connecting[Number(button.dataset.idx)]);
     });
   });
 }
