@@ -6,6 +6,7 @@
 - A `users/{uid}` profile document and private `users/{uid}/trips` saved itineraries.
 - Public, authenticated reviews stored in Firestore; authors can only modify their own records.
 - Live current weather from Open-Meteo (no API key), with the original demo data as a fallback.
+- Real-time community crowd reporting: authenticated travellers submit a current crowd read, and all viewers receive Firestore updates immediately. Only reports from the last 30 minutes affect the live status.
 - Firebase Hosting configuration and production Firestore security rules.
 
 ## Launch this in order (about 20 minutes)
@@ -30,7 +31,7 @@
 
 1. Search a destination from the home page; the selection carries through every tool.
 2. Open **Weather Advisory** to show live current temperature from Open-Meteo.
-3. Open **Crowd & Peak Hours** to explain the crowd model/forecast. It is clearly labelled as a historical-pattern estimate, not real-time sensor data.
+3. Open **Crowd & Peak Hours** to show live visitor reports. Create two test accounts/windows, submit reports, and show the live status update immediately. The chart remains a historical hourly pattern, clearly separate from the live reports.
 4. In **Trip Planner**, add nearby places, choose travel mode, sign in, and select **Save this itinerary**.
 5. Submit a review, refresh the page, and show that it remains: that demonstrates database persistence.
 
@@ -41,5 +42,5 @@ This prototype does not take payments or issue tickets/hotel reservations. Do no
 ## API notes
 
 - The weather implementation calls Open-Meteo directly from [js/weather.js](js/weather.js). It needs no account/key for this demo.
-- Crowd values, travel options, and cost estimates currently originate in [js/data.js](js/data.js), and should be presented as model/demo data until a verified data provider is integrated.
+- Hourly crowd-chart values, travel options, and cost estimates currently originate in [js/data.js](js/data.js). The current crowd status is now based on recent user reports, not those static values. For a verified sensor-grade system, integrate venue counters, Wi-Fi/Bluetooth analytics, or a government/venue data feed with user consent.
 - To add a paid/secret API later, create a Cloud Function endpoint and call that endpoint from the browser. Keep provider tokens only in Firebase/Google Cloud secrets.

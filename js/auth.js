@@ -68,6 +68,19 @@
     async saveTrip(trip) {
       if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
       await db.collection('users').doc(auth.currentUser.uid).collection('trips').add({ ...trip, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    },
+    subscribeCrowd(destinationId, callback) {
+      if (!db) { callback([]); return () => {}; }
+      return db.collection('crowdReports').doc(destinationId).collection('reports').onSnapshot(snapshot => {
+        callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }, error => { console.warn('Could not load live crowd reports', error); callback([]); });
+    },
+    async reportCrowd(destinationId, level) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      if (!['low', 'medium', 'high'].includes(level)) throw new Error('Invalid crowd level.');
+      await db.collection('crowdReports').doc(destinationId).collection('reports').doc(auth.currentUser.uid).set({
+        level, reportedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
     }
   };
   if (configured && window.firebase) {
