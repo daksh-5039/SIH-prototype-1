@@ -1,0 +1,81 @@
+/* Firebase-powered account, review and itinerary helpers. */
+(function () {
+  const config = window.RAHI_FIREBASE_CONFIG || {};
+  const configured = config.apiKey && !config.apiKey.startsWith('PASTE_');
+  let auth = null;
+  let db = null;
+
+  function safeText(value) { return String(value || '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  function showMessage(text, isError) {
+    const el = document.getElementById('auth-message');
+    if (el) { el.textContent = text; el.className = `auth-message ${isError ? 'error' : 'success'}`; }
+  }
+  function openAuth() { document.getElementById('auth-modal')?.classList.add('open'); }
+  function closeAuth() { document.getElementById('auth-modal')?.classList.remove('open'); }
+  function renderUser(user) {
+    const area = document.getElementById('auth-area');
+    if (!area) return;
+    area.innerHTML = user
+      ? `<span class="user-email">${safeText(user.displayName || user.email)}</span><button class="account-btn" id="logout-btn">Log out</button>`
+      : `<button class="account-btn" id="login-btn">Log in / Sign up</button>`;
+    document.getElementById('login-btn')?.addEventListener('click', openAuth);
+    document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
+  }
+  async function submitAuth(mode) {
+    if (!configured) return showMessage('Add your Firebase web configuration in js/firebase-config.js first.', true);
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    if (!email || password.length < 6) return showMessage('Enter a valid email and a password of at least 6 characters.', true);
+    try {
+      if (mode === 'signup') {
+        const result = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection('users').doc(result.user.uid).set({ email, createdAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      } else await auth.signInWithEmailAndPassword(email, password);
+      closeAuth();
+    } catch (error) { showMessage(error.message.replace('Firebase: ', ''), true); }
+  }
+  function injectUI() {
+    const header = document.querySelector('.header-inner');
+    if (header && !document.getElementById('auth-area')) header.insertAdjacentHTML('beforeend', '<div id="auth-area" class="auth-area"></div>');
+    document.body.insertAdjacentHTML('beforeend', `
+      <div class="auth-modal" id="auth-modal" aria-hidden="true"><div class="auth-dialog" role="dialog" aria-modal="true" aria-label="Account">
+        <button class="auth-close" id="auth-close" aria-label="Close">×</button><h3>Travel with Rahi</h3>
+        <p>Sign in to publish reviews and save your itinerary.</p>
+        <input id="auth-email" type="email" placeholder="Email address" autocomplete="email">
+        <input id="auth-password" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
+        <div class="auth-actions"><button id="signin-btn">Log in</button><button id="signup-btn">Create account</button></div>
+        <div id="auth-message" class="auth-message"></div>
+      </div></div>`);
+    document.getElementById('auth-close').addEventListener('click', closeAuth);
+    document.getElementById('auth-modal').addEventListener('click', e => { if (e.target.id === 'auth-modal') closeAuth(); });
+    document.getElementById('signin-btn').addEventListener('click', () => submitAuth('signin'));
+    document.getElementById('signup-btn').addEventListener('click', () => submitAuth('signup'));
+  }
+  window.rahiApi = {
+    configured: () => configured,
+    currentUser: () => auth?.currentUser || null,
+    requireUser: () => { if (!auth?.currentUser) { openAuth(); return false; } return true; },
+    async getReviews(destinationId) {
+      if (!db) return [];
+      const snapshot = await db.collection('reviews').where('destinationId', '==', destinationId).limit(30).get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), date: doc.data().createdAt?.toDate?.().toLocaleDateString('en-IN') || 'Just now' })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    },
+    async addReview(destinationId, rating, text) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      const user = auth.currentUser;
+      await db.collection('reviews').add({ destinationId, rating, text, userId: user.uid, name: user.displayName || user.email.split('@')[0], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    },
+    async saveTrip(trip) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      await db.collection('users').doc(auth.currentUser.uid).collection('trips').add({ ...trip, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+  };
+  if (configured && window.firebase) {
+    firebase.initializeApp(config); auth = firebase.auth(); db = firebase.firestore();
+    auth.onAuthStateChanged(renderUser);
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    injectUI();
+    renderUser(auth?.currentUser || null);
+  });
+})();

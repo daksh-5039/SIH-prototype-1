@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Calculator — Rahi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Ra<span>hi</span></span></div>
+    <nav class="navlinks" id="navlinks">
+      <button data-view="home">Home</button>
+      <button data-view="planner">Trip Planner</button>
+      <button data-view="crowd">Crowd &amp; Peak Hours</button>
+      <button data-view="expense">Expense Calculator</button>
+      <button data-view="weather">Weather Advisory</button>
+    </nav>
+    <button class="header-cta" onclick="navigateTo('planner')">Plan a trip</button>
+  </div>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-head">
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Ra<span>hi</span></span></div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <nav class="drawer-nav" id="drawerNav">
+    <button data-view="home"><span class="dot"></span>Home</button>
+    <button data-view="planner"><span class="dot"></span>Trip Planner</button>
+    <button data-view="crowd"><span class="dot"></span>Crowd &amp; Peak Hours</button>
+    <button data-view="expense"><span class="dot"></span>Expense Calculator</button>
+    <button data-view="weather"><span class="dot"></span>Weather Advisory</button>
+  </nav>
+</div>
+
+<!-- ========== EXPENSE CALCULATOR ========== -->
+<section class="view active" id="view-expense">
+  <div class="wrap section-top">
+    <div class="section-head">
+      <h2>Expense calculator</h2>
+      <p class="section-desc">Set your budget, days and headcount — get a spend split across stay, travel, food and activities.</p>
+    </div>
+    <div class="expense-grid">
+      <div class="card">
+        <div class="field"><label for="dest-select">Destination</label><select id="dest-select"></select></div>
+        <div class="field-row">
+          <div class="field"><label for="days-input">Days</label><input type="number" id="days-input" value="4" min="1" max="30"></div>
+          <div class="field"><label for="people-input">Travellers</label><input type="number" id="people-input" value="2" min="1" max="20"></div>
+        </div>
+        <div class="field">
+          <label for="budget-input">Total budget: <span id="budget-display">₹40,000</span></label>
+          <input type="range" id="budget-input" min="5000" max="200000" step="1000" value="40000">
+          <div class="range-val"><span>₹5,000</span><span>₹2,00,000</span></div>
+        </div>
+        <div class="field">
+          <label for="style-select">Travel style</label>
+          <select id="style-select">
+            <option value="budget">Budget — hostels, local transport, street food</option>
+            <option value="balanced" selected>Balanced — 3-star stays, mixed transport</option>
+            <option value="comfort">Comfort — 4-star stays, private cabs</option>
+          </select>
+        </div>
+        <button class="calc-btn" onclick="calculateExpense()">Calculate budget split</button>
+      </div>
+      <div class="card" id="expense-result"></div>
+    </div>
+  </div>
+</section>
+
+
+<footer>
+  <div class="wrap footer-inner">
+    <p>Rahi — SIH prototype. All crowd, weather and pricing data shown is simulated for demo purposes.</p>
+    <p>Built with the frontend, wired for a live backend.</p>
+  </div>
+</footer>
+
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/common.js"></script>
+<script src="js/expense.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  initNav('expense');
+  initExpenseForm();
+</script>
+</body>
+</html>

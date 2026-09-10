@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rahi — Travel Smarter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Ra<span>hi</span></span></div>
+    <nav class="navlinks" id="navlinks">
+      <button data-view="home">Home</button>
+      <button data-view="planner">Trip Planner</button>
+      <button data-view="crowd">Crowd &amp; Peak Hours</button>
+      <button data-view="expense">Expense Calculator</button>
+      <button data-view="weather">Weather Advisory</button>
+    </nav>
+    <button class="header-cta" onclick="navigateTo('planner')">Plan a trip</button>
+  </div>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-head">
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Ra<span>hi</span></span></div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <nav class="drawer-nav" id="drawerNav">
+    <button data-view="home"><span class="dot"></span>Home</button>
+    <button data-view="planner"><span class="dot"></span>Trip Planner</button>
+    <button data-view="crowd"><span class="dot"></span>Crowd &amp; Peak Hours</button>
+    <button data-view="expense"><span class="dot"></span>Expense Calculator</button>
+    <button data-view="weather"><span class="dot"></span>Weather Advisory</button>
+  </nav>
+</div>
+
+<!-- ========== HOME ========== -->
+<section class="view active" id="view-home">
+  <div class="hero">
+    <div class="wrap">
+      <div class="hero-eyebrow">Smart India Hackathon · Tourism Prototype</div>
+      <h1>Search a destination. Get the <span class="accent">whole trip</span> planned around it.</h1>
+      <p class="hero-sub">Best time to go, how crowded it is right now, the quietest hour to visit, and what it'll cost — in one search.</p>
+
+      <div class="search-card">
+        <div class="search-label">Search destinations</div>
+        <div class="search-row">
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="dest-search" placeholder="Try 'Goa', 'Jaipur', 'Manali'…" autocomplete="off">
+            <div class="suggest-list" id="suggest-list"></div>
+          </div>
+          <button class="search-go" id="search-go-btn">Search</button>
+        </div>
+        <div class="popular-tags">
+          <span class="plabel">Popular:</span>
+          <span class="ptag" data-id="taj">Taj Mahal</span>
+          <span class="ptag" data-id="goa">Goa</span>
+          <span class="ptag" data-id="jaipur">Jaipur</span>
+          <span class="ptag" data-id="kerala">Kerala Backwaters</span>
+          <span class="ptag" data-id="manali">Manali</span>
+        </div>
+      </div>
+
+      <div class="hero-strip">
+        <div class="hstrip-item"><div class="n">6</div><div class="l">Destinations covered</div></div>
+        <div class="hstrip-item"><div class="n">24h</div><div class="l">Crowd forecasting window</div></div>
+        <div class="hstrip-item"><div class="n">5</div><div class="l">Planning tools in one place</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="quick-panel" id="quick-panel"></div>
+  </div>
+
+  <div class="wrap section-top">
+    <div class="section-head">
+      <h2>Everything a trip needs, before you book anything</h2>
+      <p class="section-desc">Five tools that talk to each other — search a destination once, and it carries through every tool below.</p>
+    </div>
+    <div class="feature-grid" id="feature-grid"></div>
+  </div>
+</section>
+
+
+<footer>
+  <div class="wrap footer-inner">
+    <p>Rahi — SIH prototype. All crowd, weather and pricing data shown is simulated for demo purposes.</p>
+    <p>Built with the frontend, wired for a live backend.</p>
+  </div>
+</footer>
+
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/common.js"></script>
+<script src="js/home.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  initNav('home');
+  renderFeatureGrid();
+</script>
+</body>
+</html>
