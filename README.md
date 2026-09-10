@@ -44,3 +44,13 @@ This prototype does not take payments or issue tickets/hotel reservations. Do no
 - The weather implementation calls Open-Meteo directly from [js/weather.js](js/weather.js). It needs no account/key for this demo.
 - Hourly crowd-chart values, travel options, and cost estimates currently originate in [js/data.js](js/data.js). The current crowd status is now based on recent user reports, not those static values. For a verified sensor-grade system, integrate venue counters, Wi-Fi/Bluetooth analytics, or a government/venue data feed with user consent.
 - To add a paid/secret API later, create a Cloud Function endpoint and call that endpoint from the browser. Keep provider tokens only in Firebase/Google Cloud secrets.
+
+## Rahi Smart Assistant: zero-cost setup
+
+The Smart Assistant is fully free. It runs in the visitor's browser using Rahi's destination data and the signed-in user's saved plans/budgets. It creates structured itineraries, cost splits, travel suggestions, weather/timing reminders, and packing lists, then saves the conversation privately to the user profile.
+
+It does not use an AI API, Cloud Functions, or an API key, so it has no per-message cost. Present it accurately as a rule-based smart travel assistant, not as a generative AI model. Deploy normally:
+
+```powershell
+firebase deploy
+```

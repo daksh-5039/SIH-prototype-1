@@ -13,7 +13,9 @@ const RAHI_PAGES = {
   planner: 'planner.html',
   crowd:   'crowd.html',
   expense: 'expense.html',
-  weather: 'weather.html'
+  weather: 'weather.html',
+  profile: 'profile.html',
+  chat:    'chat.html'
 };
 
 /* Navigates the browser to the page for the given menu item */

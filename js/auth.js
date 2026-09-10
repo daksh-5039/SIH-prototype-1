@@ -16,10 +16,13 @@
     const area = document.getElementById('auth-area');
     if (!area) return;
     area.innerHTML = user
-      ? `<span class="user-email">${safeText(user.displayName || user.email)}</span><button class="account-btn" id="logout-btn">Log out</button>`
+      ? `<button class="account-btn" id="ai-btn" title="Open Smart Assistant">Smart Assistant</button><button class="account-btn profile-link" id="profile-btn" title="Open your profile">Profile</button><button class="account-btn" id="logout-btn">Log out</button>`
       : `<button class="account-btn" id="login-btn">Log in / Sign up</button>`;
     document.getElementById('login-btn')?.addEventListener('click', openAuth);
+    document.getElementById('ai-btn')?.addEventListener('click', () => window.location.href = 'chat.html');
+    document.getElementById('profile-btn')?.addEventListener('click', () => window.location.href = 'profile.html');
     document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
+    document.dispatchEvent(new CustomEvent('rahi-auth-change', { detail: { user } }));
   }
   async function submitAuth(mode) {
     if (!configured) return showMessage('Add your Firebase web configuration in js/firebase-config.js first.', true);
@@ -68,6 +71,42 @@
     async saveTrip(trip) {
       if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
       await db.collection('users').doc(auth.currentUser.uid).collection('trips').add({ ...trip, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    },
+    async saveExpense(expense) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      await db.collection('users').doc(auth.currentUser.uid).collection('expenses').add({ ...expense, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    },
+    async getProfileData() {
+      if (!auth?.currentUser || !db) return { trips: [], expenses: [], chats: [] };
+      const userRef = db.collection('users').doc(auth.currentUser.uid);
+      const [trips, expenses, chats] = await Promise.all([userRef.collection('trips').get(), userRef.collection('expenses').get(), userRef.collection('chats').get()]);
+      const sortNewest = items => items.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      return {
+        trips: sortNewest(trips.docs.map(doc => ({ id: doc.id, ...doc.data() }))),
+        expenses: sortNewest(expenses.docs.map(doc => ({ id: doc.id, ...doc.data() }))),
+        chats: sortNewest(chats.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+      };
+    },
+    async createChat(title) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      const ref = await db.collection('users').doc(auth.currentUser.uid).collection('chats').add({ title, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      return ref.id;
+    },
+    async getChatMessages(chatId) {
+      if (!auth?.currentUser || !db || !chatId) return [];
+      const snapshot = await db.collection('users').doc(auth.currentUser.uid).collection('chats').doc(chatId).collection('messages').orderBy('createdAt').get();
+      return snapshot.docs.map(doc => ({ id:doc.id, ...doc.data() }));
+    },
+    async saveChatMessage(chatId, role, text) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      const chat = db.collection('users').doc(auth.currentUser.uid).collection('chats').doc(chatId);
+      await chat.collection('messages').add({ role, text, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      await chat.set({ updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    },
+    async askTravelAi(message, history) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      const profile = await window.rahiApi.getProfileData();
+      return window.rahiSmartAssistant.reply(message, profile, history);
     },
     subscribeCrowd(destinationId, callback) {
       if (!db) { callback([]); return () => {}; }

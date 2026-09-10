@@ -40,7 +40,21 @@ function calculateExpense(){
              : `Within your ₹${budget.toLocaleString('en-IN')} budget, with ₹${(budget-estimatedCost).toLocaleString('en-IN')} to spare.`}
     </div>
     ${rows.map(r=>`<div class="breakdown-row"><span class="lbl">${r.lbl}</span><div class="bar-track"><div class="bar-fill" style="width:${r.pct*100}%;background:${r.color};"></div></div><span class="amt">₹${Math.round(estimatedCost*r.pct).toLocaleString('en-IN')}</span></div>`).join('')}
+    <button class="save-trip-btn" onclick="saveExpensePlan()">Save this budget</button>
+    <p class="save-trip-note" id="save-expense-note"></p>
   `;
 }
+async function saveExpensePlan(){
+  const d = destinations.find(x=>x.id===document.getElementById('dest-select').value);
+  const days = Math.max(1, Number(document.getElementById('days-input').value) || 1);
+  const people = Math.max(1, Number(document.getElementById('people-input').value) || 1);
+  const budget = Number(document.getElementById('budget-input').value);
+  const style = document.getElementById('style-select').value;
+  const estimatedCost = Math.round(3200 * {budget:0.75, balanced:1, comfort:1.4}[style] * destCostIndex(d.id) * days * people);
+  const note = document.getElementById('save-expense-note');
+  try {
+    await window.rahiApi.saveExpense({ destinationId:d.id, destinationName:d.name, days, people, budget, style, estimatedCost });
+    note.textContent = 'Saved to your profile.';
+  } catch(error) { if(window.rahiApi.currentUser()) note.textContent = 'Could not save this budget. Please try again.'; }
+}
 function destCostIndex(id){ const idx = {taj:1.1, jaipur:1.0, goa:1.25, kerala:1.15, manali:1.05, varanasi:0.85}; return idx[id] || 1; }
-

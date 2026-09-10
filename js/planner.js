@@ -130,7 +130,7 @@ async function renderReviews(d){
     catch (error) { remoteReviews[d.id] = []; console.warn('Could not load reviews', error); }
     if (getCurrentDest() === d.id) return renderReviews(d);
   }
-  const reviews = [...(remoteReviews[d.id] || []), ...d.reviews];
+  const reviews = [...(remoteReviews[d.id] || []), ...(d.reviews || [])];
   const avg = reviews.length ? (reviews.reduce((s,r)=>s+r.rating,0)/reviews.length) : 0;
   const counts = [5,4,3,2,1].map(star=> reviews.filter(r=>r.rating===star).length);
   const maxCount = Math.max(1, ...counts);
