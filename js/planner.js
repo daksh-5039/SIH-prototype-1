@@ -9,6 +9,7 @@ const selectedMode = {};   // destId -> mode name
 const addedPlaces = {};    // destId -> Set of place names
 const reviewDraft = {};    // destId -> current star rating being picked
 const remoteReviews = {};  // Firestore reviews grouped by destination
+let selectedReviewPlace = 'city';
 const selectedInterests = new Set(['all']);
 const placeCategories = {
   'Agra Fort':['history','culture'],'Fatehpur Sikri':['history','culture'],'Mehtab Bagh':['nature','culture'],
@@ -56,7 +57,9 @@ function renderPlannerAll(){
   renderSelectedModeCard(d);
   renderTravelOptions(d);
   renderConnectingGrid(d);
-  renderReviews(d);
+  if(selectedReviewPlace !== 'city' && !d.connecting.some(place => place.name === selectedReviewPlace)) selectedReviewPlace = 'city';
+  renderReviewScopes(d);
+  renderReviews(d, selectedReviewPlace);
 }
 function renderPlannerDetail(d){
   document.querySelectorAll('#planner-chips .dest-chip').forEach(c=>c.classList.toggle('active', c.dataset.id===getCurrentDest()));
@@ -183,17 +186,27 @@ function renderConnectingGrid(d){
 }
 
 /* ============ REVIEWS ============ */
-async function renderReviews(d){
-  if (remoteReviews[d.id] === undefined && window.rahiApi?.configured()) {
-    try { remoteReviews[d.id] = await window.rahiApi.getReviews(d.id); }
-    catch (error) { remoteReviews[d.id] = []; console.warn('Could not load reviews', error); }
-    if (getCurrentDest() === d.id) return renderReviews(d);
+function reviewScopeId(d, placeName){
+  return placeName === 'city' ? d.id : `${d.id}__${d.connecting.findIndex(place => place.name === placeName)}`;
+}
+function renderReviewScopes(d){
+  const scope = document.getElementById('review-place-scopes');
+  scope.innerHTML = `<span class="scope-label">Reviews for</span><button type="button" class="place-scope-chip ${selectedReviewPlace==='city'?'active':''}" data-review-place="city">${d.name} city</button>${d.connecting.map(place => `<button type="button" class="place-scope-chip ${selectedReviewPlace===place.name?'active':''}" data-review-place="${escapeHtml(place.name)}">${escapeHtml(place.name)}</button>`).join('')}`;
+  scope.querySelectorAll('[data-review-place]').forEach(button => button.addEventListener('click', () => { selectedReviewPlace = button.dataset.reviewPlace; renderReviewScopes(d); renderReviews(d, selectedReviewPlace); }));
+}
+async function renderReviews(d, placeName='city'){
+  const scopeId = reviewScopeId(d, placeName);
+  const subjectName = placeName === 'city' ? d.name : placeName;
+  if (remoteReviews[scopeId] === undefined && window.rahiApi?.configured()) {
+    try { remoteReviews[scopeId] = await window.rahiApi.getReviews(scopeId); }
+    catch (error) { remoteReviews[scopeId] = []; console.warn('Could not load reviews', error); }
+    if (getCurrentDest() === d.id && selectedReviewPlace === placeName) return renderReviews(d, placeName);
   }
-  const reviews = [...(remoteReviews[d.id] || []), ...(d.reviews || [])];
+  const reviews = [...(remoteReviews[scopeId] || [])];
   const avg = reviews.length ? (reviews.reduce((s,r)=>s+r.rating,0)/reviews.length) : 0;
   const counts = [5,4,3,2,1].map(star=> reviews.filter(r=>r.rating===star).length);
   const maxCount = Math.max(1, ...counts);
-  if(reviewDraft[d.id]===undefined) reviewDraft[d.id] = 5;
+  if(reviewDraft[scopeId]===undefined) reviewDraft[scopeId] = 5;
 
   document.getElementById('reviews-section').innerHTML = `
     <div class="reviews-summary">
@@ -220,33 +233,35 @@ async function renderReviews(d){
         </div>`).join('')}
     </div>
     <div class="review-form">
-      <h4 style="font-size:15px;">Visited ${d.name}? Share your review</h4>
+      <h4 style="font-size:15px;">Visited ${subjectName}? Share your review</h4>
       <div class="star-picker" id="star-picker">
-        ${[1,2,3,4,5].map(s=>`<button type="button" data-star="${s}" class="${s<=reviewDraft[d.id]?'active':''}">★</button>`).join('')}
+        ${[1,2,3,4,5].map(s=>`<button type="button" data-star="${s}" class="${s<=reviewDraft[scopeId]?'active':''}">★</button>`).join('')}
       </div>
       <textarea id="review-text-input" placeholder="What was your experience like?"></textarea>
-      <button class="calc-btn" style="margin-top:12px;" onclick="submitReview('${d.id}')">Submit review</button>
+      <button class="calc-btn" style="margin-top:12px;" onclick="submitReview('${d.id}', '${encodeURIComponent(placeName)}')">Submit review</button>
       <p class="review-submit-note" id="review-submit-note">Thanks — your review has been added above.</p>
     </div>
   `;
   document.querySelectorAll('#star-picker button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      reviewDraft[d.id] = Number(btn.dataset.star);
-      renderReviews(d);
+      reviewDraft[scopeId] = Number(btn.dataset.star);
+      renderReviews(d, placeName);
       document.getElementById('review-text-input')?.focus();
     });
   });
 }
-async function submitReview(destId){
+async function submitReview(destId, encodedPlaceName='city'){
   const d = destinations.find(x=>x.id===destId);
+  const placeName = decodeURIComponent(encodedPlaceName);
+  const scopeId = reviewScopeId(d, placeName);
   const textInput = document.getElementById('review-text-input');
   const text = textInput.value.trim();
   if(!text){ textInput.focus(); return; }
   try {
-    await window.rahiApi.addReview(destId, reviewDraft[d.id], text);
-    remoteReviews[destId] = await window.rahiApi.getReviews(destId);
-    reviewDraft[d.id] = 5;
-    renderReviews(d);
+    await window.rahiApi.addReview(scopeId, reviewDraft[scopeId], text);
+    remoteReviews[scopeId] = await window.rahiApi.getReviews(scopeId);
+    reviewDraft[scopeId] = 5;
+    renderReviews(d, placeName);
   } catch (error) {
     if (window.rahiApi.currentUser()) alert('Your review could not be saved. Please try again.');
   }

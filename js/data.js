@@ -137,3 +137,19 @@ function setCurrentDest(id){
 /* ============ SMALL SHARED UTILITIES ============ */
 function starString(n){ return '★★★★★'.slice(0,n) + '☆☆☆☆☆'.slice(0, 5-n); }
 function escapeHtml(s){ const div=document.createElement('div'); div.textContent=s; return div.innerHTML; }
+
+/* Attraction crowd profiles are local historical estimates for this prototype.
+   They intentionally vary by place, so a city centre and its attractions do not
+   display the same peak-hour pattern. */
+function getPlaceCrowdProfile(destination, place){
+  const placeIndex = destination.connecting.findIndex(item => item.name === place.name);
+  const shifts = [-2, 1, 3];
+  const shift = shifts[placeIndex] || 0;
+  const multiplier = [0.82, 0.67, 0.74][placeIndex] || 0.75;
+  const hourly = destination.hourly.map((value, hour) => {
+    const sourceHour = (hour - shift + 24) % 24;
+    const adjusted = destination.hourly[sourceHour] * multiplier + (placeIndex === 0 && hour >= 16 && hour <= 19 ? 12 : 0);
+    return Math.max(5, Math.min(96, Math.round(adjusted)));
+  });
+  return { id:`${destination.id}__${placeIndex}`, name:place.name, hourly, isPlace:true, place };
+}
