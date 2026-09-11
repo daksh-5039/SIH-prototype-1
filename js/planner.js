@@ -10,6 +10,9 @@ const addedPlaces = {};    // destId -> Set of place names
 const reviewDraft = {};    // destId -> current star rating being picked
 const remoteReviews = {};  // Firestore reviews grouped by destination
 let selectedReviewPlace = 'city';
+const MAX_REVIEW_VIDEO_BYTES = 50 * 1024 * 1024;
+const ALLOWED_REVIEW_VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
+const ALLOWED_REVIEW_VIDEO_EXTENSION = /\.(mp4|webm|mov)$/i;
 const selectedInterests = new Set(['all']);
 const placeCategories = {
   'Agra Fort':['history','culture'],'Fatehpur Sikri':['history','culture'],'Mehtab Bagh':['nature','culture'],
@@ -207,8 +210,13 @@ async function renderReviews(d, placeName='city'){
   const counts = [5,4,3,2,1].map(star=> reviews.filter(r=>r.rating===star).length);
   const maxCount = Math.max(1, ...counts);
   if(reviewDraft[scopeId]===undefined) reviewDraft[scopeId] = 5;
+  const videoReviews = reviews.filter(review => review.videoUrl);
 
   document.getElementById('reviews-section').innerHTML = `
+    <div class="video-review-showcase">
+      <div class="video-review-head"><div><h4>Visitor video reviews</h4><p>Watch short clips shared by travellers before you visit ${escapeHtml(subjectName)}.</p></div><span>${videoReviews.length} video${videoReviews.length===1?'':'s'}</span></div>
+      ${renderVideoReviewGrid(videoReviews, subjectName)}
+    </div>
     <div class="reviews-summary">
       <div class="rs-score">
         <div class="n">${avg.toFixed(1)}</div>
@@ -237,11 +245,17 @@ async function renderReviews(d, placeName='city'){
       <div class="star-picker" id="star-picker">
         ${[1,2,3,4,5].map(s=>`<button type="button" data-star="${s}" class="${s<=reviewDraft[scopeId]?'active':''}">★</button>`).join('')}
       </div>
-      <textarea id="review-text-input" placeholder="What was your experience like?"></textarea>
+      <textarea id="review-text-input" placeholder="What was your experience like? (optional with a video)"></textarea>
+      <label class="video-upload-field" for="review-video-input"><span>Attach a short video review <em>optional · max 50 MB</em></span><input id="review-video-input" type="file" accept="video/mp4,video/webm,video/quicktime"><span class="video-file-button">Choose video</span><span class="video-file-name" id="review-video-file-name">No video selected</span><small id="review-video-note">Share a short clip to help future visitors.</small></label>
       <button class="calc-btn" style="margin-top:12px;" onclick="submitReview('${d.id}', '${encodeURIComponent(placeName)}')">Submit review</button>
       <p class="review-submit-note" id="review-submit-note">Thanks — your review has been added above.</p>
     </div>
   `;
+  wireVideoReviewGrid(videoReviews);
+  document.getElementById('review-video-input')?.addEventListener('change', event => {
+    const name = event.target.files?.[0]?.name || 'No video selected';
+    document.getElementById('review-video-file-name').textContent = name;
+  });
   document.querySelectorAll('#star-picker button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       reviewDraft[scopeId] = Number(btn.dataset.star);
@@ -250,19 +264,74 @@ async function renderReviews(d, placeName='city'){
     });
   });
 }
+function isCloudinaryConfigured(){
+  const config = window.TOURISENSE_CLOUDINARY_CONFIG || {};
+  return Boolean(config.cloudName && config.uploadPreset && !config.cloudName.startsWith('PASTE_'));
+}
+function renderVideoReviewGrid(videos, subjectName){
+  if(!videos.length) return `<div class="video-review-empty">No visitor videos yet. Be the first logged-in traveller to share a short video of ${escapeHtml(subjectName)}.</div>`;
+  const preview = videos.slice(0, 3);
+  const remaining = videos.slice(3);
+  const tile = review => `<button type="button" class="video-review-tile" data-video-url="${escapeHtml(review.videoUrl)}"><video preload="metadata" src="${escapeHtml(review.videoUrl)}#t=0.1" muted playsinline></video><span class="video-play-icon">▶</span><small>${escapeHtml(review.name || 'Traveller')}</small></button>`;
+  const finalTile = remaining.length === 1 ? tile(remaining[0]) : `<button type="button" class="video-review-tile more-videos" data-more-videos="true"><span class="video-more-number">+${remaining.length}</span><small>More traveller videos</small></button>`;
+  return `<div class="video-review-grid">${preview.map(tile).join('')}${remaining.length ? finalTile : ''}</div>`;
+}
+function openVideoReviewModal(videos, startIndex=0){
+  const existing = document.getElementById('video-review-modal'); if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'video-review-modal'; modal.className = 'video-review-modal';
+  modal.innerHTML = `<div class="video-review-dialog" role="dialog" aria-modal="true" aria-label="Visitor video reviews"><button class="video-modal-close" aria-label="Close video reviews">×</button><h3>Visitor video reviews</h3><div class="video-modal-list">${videos.map((review, index) => `<button type="button" class="video-modal-item ${index===startIndex?'active':''}" data-index="${index}">${escapeHtml(review.name || 'Traveller')}’s video</button>`).join('')}</div><video class="video-modal-player" controls playsinline src="${escapeHtml(videos[startIndex].videoUrl)}"></video></div>`;
+  document.body.appendChild(modal);
+  const player = modal.querySelector('.video-modal-player');
+  modal.querySelector('.video-modal-close').addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', event => { if(event.target === modal) modal.remove(); });
+  modal.querySelectorAll('[data-index]').forEach(button => button.addEventListener('click', () => { const index=Number(button.dataset.index); player.src=videos[index].videoUrl; player.play(); modal.querySelectorAll('[data-index]').forEach(item => item.classList.toggle('active', item===button)); }));
+}
+function wireVideoReviewGrid(videos){
+  document.querySelectorAll('[data-video-url]').forEach(button => button.addEventListener('click', () => {
+    const index = videos.findIndex(review => review.videoUrl === button.dataset.videoUrl); openVideoReviewModal(videos, Math.max(0,index));
+  }));
+  document.querySelector('[data-more-videos]')?.addEventListener('click', () => openVideoReviewModal(videos, 3));
+}
 async function submitReview(destId, encodedPlaceName='city'){
   const d = destinations.find(x=>x.id===destId);
   const placeName = decodeURIComponent(encodedPlaceName);
   const scopeId = reviewScopeId(d, placeName);
   const textInput = document.getElementById('review-text-input');
   const text = textInput.value.trim();
-  if(!text){ textInput.focus(); return; }
+  const videoInput = document.getElementById('review-video-input');
+  const videoFile = videoInput?.files?.[0] || null;
+  if(!text && !videoFile){ textInput.focus(); return; }
+  if(videoFile && (!ALLOWED_REVIEW_VIDEO_TYPES.has(videoFile.type) || !ALLOWED_REVIEW_VIDEO_EXTENSION.test(videoFile.name) || videoFile.size > MAX_REVIEW_VIDEO_BYTES)){
+    const note = document.getElementById('review-video-note');
+    if(note) note.textContent = 'Only MP4, WebM or MOV videos up to 50 MB are allowed.';
+    return;
+  }
+  if(videoFile && !isCloudinaryConfigured()){
+    const note = document.getElementById('review-video-note');
+    if(note) note.textContent = 'Video uploads need the free Cloudinary setup in js/cloudinary-config.js first.';
+    return;
+  }
   try {
-    await window.rahiApi.addReview(scopeId, reviewDraft[scopeId], text);
+    const submitButton = document.querySelector('#reviews-section .calc-btn');
+    if(submitButton) { submitButton.disabled = true; submitButton.textContent = videoFile ? 'Uploading video…' : 'Saving review…'; }
+    const video = videoFile ? await uploadReviewVideo(videoFile) : null;
+    await window.rahiApi.addReview(scopeId, reviewDraft[scopeId], text || 'Shared a visitor video review.', video);
     remoteReviews[scopeId] = await window.rahiApi.getReviews(scopeId);
     reviewDraft[scopeId] = 5;
     renderReviews(d, placeName);
   } catch (error) {
-    if (window.rahiApi.currentUser()) alert('Your review could not be saved. Please try again.');
+    const note = document.getElementById('review-video-note');
+    if(note) note.textContent = `Could not upload the video: ${error.message}`;
+    else if (window.rahiApi.currentUser()) alert('Your review could not be saved. Please try again.');
   }
+}
+async function uploadReviewVideo(file){
+  const config = window.TOURISENSE_CLOUDINARY_CONFIG;
+  const form = new FormData();
+  form.append('file', file); form.append('upload_preset', config.uploadPreset); form.append('tags', 'tourisense-review');
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(config.cloudName)}/video/upload`, { method:'POST', body:form });
+  const result = await response.json();
+  if(!response.ok || !result.secure_url) throw new Error(result.error?.message || 'Cloud upload failed.');
+  return { url:result.secure_url, duration:result.duration || null };
 }

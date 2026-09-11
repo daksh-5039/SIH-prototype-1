@@ -35,6 +35,17 @@
 4. In **Trip Planner**, add nearby places, choose travel mode, sign in, and select **Save this itinerary**.
 5. Submit a review, refresh the page, and show that it remains: that demonstrates database persistence.
 
+## Optional free visitor video reviews
+
+The planner review section supports an optional video attached to a logged-in visitor's review. The video is uploaded directly from that visitor's browser to Cloudinary's cloud platform; it is never copied into this project's folder or stored on your computer. Firestore stores only the public video link beside the written review.
+
+1. Create a free account at [Cloudinary](https://cloudinary.com/pricing).
+2. In **Settings → Upload → Upload presets**, create an **unsigned** preset for this prototype. Restrict it to video uploads, allow only `mp4`, `webm`, and `mov`, set a 50 MB maximum file size, and disallow public IDs. Do not place an API secret in this website.
+3. Copy the Cloudinary **cloud name** and your preset name into [js/cloudinary-config.js](js/cloudinary-config.js). These two values are designed to be public browser settings; the API secret must remain private.
+4. Deploy only when you decide to do so. A signed-in user can then attach a short video when posting a city or attraction review.
+
+The free Cloudinary plan has a monthly allowance, so it is suitable for a small SIH prototype rather than unlimited public uploads. Since an unsigned browser-upload preset is discoverable in frontend code, keep its format and size restrictions tight. A production version should use a server-generated signed upload instead.
+
 ## Before calling it a production booking platform
 
 This prototype does not take payments or issue tickets/hotel reservations. Do not add Razorpay/Stripe, live hotel booking, or scraped travel prices without their merchant/account setup and server-side verification. For the next iteration, use a server or Cloud Functions for payment webhooks and any paid/secret-key travel API; never place secret keys in browser JavaScript.

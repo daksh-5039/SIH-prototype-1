@@ -63,10 +63,10 @@
       const snapshot = await db.collection('reviews').where('destinationId', '==', destinationId).limit(30).get();
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), date: doc.data().createdAt?.toDate?.().toLocaleDateString('en-IN') || 'Just now' })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     },
-    async addReview(destinationId, rating, text) {
+    async addReview(destinationId, rating, text, video = null) {
       if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
       const user = auth.currentUser;
-      await db.collection('reviews').add({ destinationId, rating, text, userId: user.uid, name: user.displayName || user.email.split('@')[0], createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      await db.collection('reviews').add({ destinationId, rating, text, userId: user.uid, name: user.displayName || user.email.split('@')[0], videoUrl: video?.url || null, videoDuration: video?.duration || null, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     },
     async saveTrip(trip) {
       if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
