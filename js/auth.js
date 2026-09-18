@@ -14,14 +14,15 @@
   function closeAuth() { document.getElementById('auth-modal')?.classList.remove('open'); }
   function renderUser(user) {
     const area = document.getElementById('auth-area');
-    if (!area) return;
-    area.innerHTML = user
-      ? `<button class="account-btn" id="ai-btn" title="Open Smart Assistant">Smart Assistant</button><button class="account-btn profile-link" id="profile-btn" title="Open your profile">Profile</button><button class="account-btn" id="logout-btn">Log out</button>`
-      : `<button class="account-btn" id="login-btn">Log in / Sign up</button>`;
-    document.getElementById('login-btn')?.addEventListener('click', openAuth);
-    document.getElementById('ai-btn')?.addEventListener('click', () => window.location.href = 'chat.html');
-    document.getElementById('profile-btn')?.addEventListener('click', () => window.location.href = 'profile.html');
-    document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
+    if (area) {
+      area.innerHTML = user
+        ? `<button class="account-btn" id="ai-btn" title="Open Smart Assistant">Smart Assistant</button><button class="account-btn profile-link" id="profile-btn" title="Open your profile">Profile</button><button class="account-btn" id="logout-btn">Log out</button>`
+        : `<button class="account-btn" id="login-btn">Log in / Sign up</button>`;
+      document.getElementById('login-btn')?.addEventListener('click', openAuth);
+      document.getElementById('ai-btn')?.addEventListener('click', () => window.location.href = 'chat.html');
+      document.getElementById('profile-btn')?.addEventListener('click', () => window.location.href = 'profile.html');
+      document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
+    }
     document.dispatchEvent(new CustomEvent('rahi-auth-change', { detail: { user } }));
   }
   async function submitAuth(mode) {
@@ -68,9 +69,33 @@
       const user = auth.currentUser;
       await db.collection('reviews').add({ destinationId, rating, text, userId: user.uid, name: user.displayName || user.email.split('@')[0], videoUrl: video?.url || null, videoDuration: video?.duration || null, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     },
+    async getLocalListings(destinationId) {
+      if (!db) return [];
+      const snapshot = await db.collection('localListings').where('destinationId', '==', destinationId).limit(50).get();
+      return snapshot.docs.map(doc => ({ id:doc.id, ...doc.data(), date:doc.data().createdAt?.toDate?.().toLocaleDateString('en-IN') || 'Recently added' })).sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    },
+    async addLocalListing(listing) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      const user = auth.currentUser;
+      await db.collection('localListings').add({ ...listing, userId:user.uid, hostName:user.displayName || user.email.split('@')[0], createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+    },
+    async getHotelPartnerProfile() {
+      if (!auth?.currentUser || !db) return null;
+      const snapshot = await db.collection('users').doc(auth.currentUser.uid).collection('hotelPartner').doc('profile').get();
+      return snapshot.exists ? { id:snapshot.id, ...snapshot.data() } : null;
+    },
+    async saveHotelPartnerProfile(profile) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      await db.collection('users').doc(auth.currentUser.uid).collection('hotelPartner').doc('profile').set({ ...profile, updatedAt:firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    },
     async saveTrip(trip) {
       if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
       await db.collection('users').doc(auth.currentUser.uid).collection('trips').add({ ...trip, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    },
+    async deleteTrip(tripId) {
+      if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');
+      if (!tripId) throw new Error('The saved itinerary could not be identified.');
+      await db.collection('users').doc(auth.currentUser.uid).collection('trips').doc(tripId).delete();
     },
     async saveExpense(expense) {
       if (!window.rahiApi.requireUser()) throw new Error('Please sign in first.');

@@ -13,6 +13,11 @@ let selectedReviewPlace = 'city';
 const MAX_REVIEW_VIDEO_BYTES = 50 * 1024 * 1024;
 const ALLOWED_REVIEW_VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
 const ALLOWED_REVIEW_VIDEO_EXTENSION = /\.(mp4|webm|mov)$/i;
+const plannerWeatherCache = new Map();
+const plannerWeatherRequests = new Map();
+const hotelResultsCache = new Map();
+const hotelRequests = new Map();
+let hotelSearchScope = 'city';
 const selectedInterests = new Set(['all']);
 const placeCategories = {
   'Agra Fort':['history','culture'],'Fatehpur Sikri':['history','culture'],'Mehtab Bagh':['nature','culture'],
@@ -40,7 +45,22 @@ function initTripTools(){
     if(interest === 'all'){ selectedInterests.clear(); selectedInterests.add('all'); }
     else { selectedInterests.delete('all'); selectedInterests.has(interest) ? selectedInterests.delete(interest) : selectedInterests.add(interest); if(!selectedInterests.size) selectedInterests.add('all'); }
     document.querySelectorAll('.interest-chip').forEach(chip => chip.classList.toggle('active', selectedInterests.has(chip.dataset.interest)));
-    renderConnectingGrid(destinations.find(x=>x.id===getCurrentDest()));
+    updatePreferenceMatch(destinations.find(x=>x.id===getCurrentDest()), false);
+  });
+  document.getElementById('apply-preferences-btn').addEventListener('click', () => {
+    const d = destinations.find(x=>x.id===getCurrentDest());
+    renderConnectingGrid(d);
+    renderSelectedModeCard(d);
+    updatePreferenceMatch(d, true);
+    document.getElementById('conn-grid').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  document.getElementById('reset-preferences-btn').addEventListener('click', () => {
+    selectedInterests.clear(); selectedInterests.add('all');
+    document.getElementById('trip-style').value = 'balanced';
+    document.getElementById('trip-constraint').value = '';
+    document.querySelectorAll('.interest-chip').forEach(chip => chip.classList.toggle('active', chip.dataset.interest === 'all'));
+    const d = destinations.find(x=>x.id===getCurrentDest());
+    renderConnectingGrid(d); renderSelectedModeCard(d); updatePreferenceMatch(d, true);
   });
   document.getElementById('planner-location-btn').addEventListener('click', () => {
     const note = document.getElementById('planner-location-note');
@@ -48,18 +68,95 @@ function initTripTools(){
     note.textContent = 'Requesting your location…';
     navigator.geolocation.getCurrentPosition(() => { note.textContent = 'Location enabled. Open a place card and select “Show distance from me”.'; }, () => { note.textContent = 'Location permission was not granted. Destination-centre distances are still shown.'; }, {enableHighAccuracy:false,timeout:10000});
   });
-  ['trip-date','trip-style','trip-constraint'].forEach(id => document.getElementById(id).addEventListener('input', () => {
-    renderSelectedModeCard(destinations.find(x=>x.id===getCurrentDest()));
+  ['trip-date','trip-constraint'].forEach(id => document.getElementById(id).addEventListener('input', () => {
+    const d = destinations.find(x=>x.id===getCurrentDest());
+    renderSelectedModeCard(d); updatePreferenceMatch(d, false);
+    if(id === 'trip-date') loadPlannerDateWeather(d);
   }));
+  document.getElementById('trip-style').addEventListener('change', () => {
+    const d = destinations.find(x=>x.id===getCurrentDest());
+    selectedMode[d.id] = recommendedModeForStyle(d, document.getElementById('trip-style').value);
+    renderTravelOptions(d); renderSelectedModeCard(d); renderHotelFinder(d); updatePreferenceMatch(d, false);
+  });
+}
+function plannerCostIndex(id){ return ({taj:1.1, jaipur:1, bhopal:.9, goa:1.25, kerala:1.15, manali:1.05, varanasi:.85}[id] || 1); }
+function travelStyleInfo(style){
+  return {
+    budget:{ multiplier:.75, label:'Budget-conscious', summary:'Prioritises value choices and a lower daily estimate.' },
+    balanced:{ multiplier:1, label:'Balanced', summary:'Balances cost, comfort and convenience.' },
+    comfort:{ multiplier:1.4, label:'Comfort-focused', summary:'Allows more for convenience and higher-comfort stays.' }
+  }[style] || { multiplier:1, label:'Balanced', summary:'Balances cost, comfort and convenience.' };
+}
+function travelOptionStartingCost(option){ return Number((option.cost || '').match(/[0-9,]+/)?.[0]?.replace(/,/g,'')) || Number.MAX_SAFE_INTEGER; }
+function recommendedModeForStyle(d, style){
+  if(style === 'budget') return [...d.travelOptions].sort((a,b) => travelOptionStartingCost(a) - travelOptionStartingCost(b))[0].mode;
+  if(style === 'comfort') return d.travelOptions.find(option => option.mode === 'Flight')?.mode || d.travelOptions[0].mode;
+  return d.travelOptions[0].mode;
+}
+function plannerDailyEstimate(d, style){ return Math.round(3200 * travelStyleInfo(style).multiplier * plannerCostIndex(d.id)); }
+function selectedTripDate(){ return document.getElementById('trip-date')?.value || new Date().toISOString().slice(0,10); }
+function readableTripDate(dateString){ return new Date(`${dateString}T12:00:00`).toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short'}); }
+function weatherDescription(code){ return ({0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Light drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',80:'Rain showers',95:'Thunderstorm'})[code] || 'Mixed conditions'; }
+function plannerWeatherKey(d){ return `${d.id}:${selectedTripDate()}`; }
+function plannerWeatherForDate(d){
+  const cached = plannerWeatherCache.get(plannerWeatherKey(d));
+  if(cached?.weather) return cached.weather;
+  return {...d.weather, source:cached?.loading ? 'Fetching daily forecast…' : 'Seasonal planning estimate'};
+}
+function selectedDateInForecastWindow(dateString){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const date = new Date(`${dateString}T00:00:00`);
+  return date >= today && Math.round((date - today) / 86400000) <= 16;
+}
+async function loadPlannerDateWeather(d){
+  const date = selectedTripDate();
+  const key = plannerWeatherKey(d);
+  if(!selectedDateInForecastWindow(date) || plannerWeatherCache.get(key)?.weather || !d.coords) return;
+  if(plannerWeatherRequests.has(key)) return plannerWeatherRequests.get(key);
+  plannerWeatherCache.set(key, {loading:true});
+  renderSelectedModeCard(d);
+  const request = (async () => { try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${d.coords.lat}&longitude=${d.coords.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&start_date=${date}&end_date=${date}`;
+    const response = await fetch(url); if(!response.ok) throw new Error('Forecast unavailable');
+    const daily = (await response.json()).daily;
+    const weather = { temp:Math.round((daily.temperature_2m_max[0] + daily.temperature_2m_min[0]) / 2), high:Math.round(daily.temperature_2m_max[0]), low:Math.round(daily.temperature_2m_min[0]), cond:weatherDescription(daily.weather_code[0]), rain:daily.precipitation_probability_max[0] ?? 0, advice:(daily.precipitation_probability_max[0] ?? 0) >= 45 ? 'warn' : 'good', source:'Open‑Meteo daily forecast' };
+    plannerWeatherCache.set(key, {weather});
+  } catch(error) { plannerWeatherCache.set(key, {weather:{...d.weather, source:'Seasonal estimate — live forecast unavailable'}}); }
+  finally { plannerWeatherRequests.delete(key); }
+  if(getCurrentDest() === d.id && selectedTripDate() === date) renderSelectedModeCard(d);
+  })();
+  plannerWeatherRequests.set(key, request);
+  return request;
+}
+function crowdForTripDate(d){
+  const date = new Date(`${selectedTripDate()}T12:00:00`);
+  const weekend = date.getDay() === 0 || date.getDay() === 6;
+  const hourly = d.hourly.map(value => Math.min(100, Math.round(value * (weekend ? 1.12 : 1))));
+  const quiet = Math.min(...hourly), peak = Math.max(...hourly), hour = new Date().getHours();
+  return { expectedAtSave:hourly[hour], average:Math.round(hourly.reduce((sum,value)=>sum+value,0)/hourly.length), quietHour:hourly.indexOf(quiet), quiet, peakHour:hourly.indexOf(peak), peak, date:selectedTripDate(), dayType:weekend ? 'Weekend pattern' : 'Weekday pattern' };
+}
+function matchingPlaces(d){
+  return d.connecting.filter(place => selectedInterests.has('all') || placeCategories[place.name]?.some(category => selectedInterests.has(category)));
+}
+function updatePreferenceMatch(d, applied){
+  const note = document.getElementById('preference-match-note');
+  if(!note) return;
+  const interests = [...selectedInterests].filter(item => item !== 'all');
+  const matchCount = matchingPlaces(d).length;
+  const interestText = interests.length ? interests.map(item => interestLabels[item].replace(/^.+?\s/, '')).join(', ') : 'all interests';
+  note.textContent = applied ? `Showing ${matchCount} matching place${matchCount===1?'':'s'} for ${interestText}.` : `Ready: ${matchCount} place${matchCount===1?'':'s'} match ${interestText}.`;
 }
 function renderPlannerAll(){
   const d = destinations.find(x=>x.id===getCurrentDest());
-  if(!selectedMode[d.id]) selectedMode[d.id] = d.travelOptions[0].mode;
+  if(!selectedMode[d.id]) selectedMode[d.id] = recommendedModeForStyle(d, document.getElementById('trip-style')?.value || 'balanced');
   if(!addedPlaces[d.id]) addedPlaces[d.id] = new Set();
   renderPlannerDetail(d);
   renderSelectedModeCard(d);
   renderTravelOptions(d);
   renderConnectingGrid(d);
+  renderHotelFinder(d);
+  updatePreferenceMatch(d, false);
+  loadPlannerDateWeather(d);
   if(selectedReviewPlace !== 'city' && !d.connecting.some(place => place.name === selectedReviewPlace)) selectedReviewPlace = 'city';
   renderReviewScopes(d);
   renderReviews(d, selectedReviewPlace);
@@ -78,6 +175,10 @@ function renderPlannerDetail(d){
 }
 function renderSelectedModeCard(d){
   const opt = d.travelOptions.find(o=>o.mode===selectedMode[d.id]);
+  const style = document.getElementById('trip-style')?.value || 'balanced';
+  const styleInfo = travelStyleInfo(style);
+  const tripWeather = plannerWeatherForDate(d);
+  const tripCrowd = crowdForTripDate(d);
   const added = addedPlaces[d.id];
   const selectedPlaces = d.connecting.filter(place => added.has(place.name));
   document.getElementById('planner-selected-mode').innerHTML = `
@@ -87,6 +188,8 @@ function renderSelectedModeCard(d){
       <div class="v" style="font-size:16px;margin-top:4px;">${opt.mode} · ${opt.duration}</div>
       <div style="font-size:12.5px;color:var(--text-soft);margin-top:3px;">${opt.cost}</div>
     </div>
+    <div class="planner-style-estimate"><span class="saved-k">Travel preference impact</span><strong>${styleInfo.label} · about ₹${plannerDailyEstimate(d, style).toLocaleString('en-IN')} per traveller/day</strong><small>${styleInfo.summary} Selected transport: ${opt.mode}.</small></div>
+    <div class="planner-date-outlook"><span class="saved-k">Trip-date outlook · ${readableTripDate(selectedTripDate())}</span><strong>${tripWeather.temp}°C · ${escapeHtml(tripWeather.cond)} · ${tripWeather.rain}% rain chance</strong><small>${tripWeather.high !== undefined ? `High ${tripWeather.high}°C · Low ${tripWeather.low}°C · ` : ''}${escapeHtml(tripWeather.source)}. Crowd: ${tripCrowd.expectedAtSave}% typical capacity at ${String(new Date().getHours()).padStart(2,'0')}:00 (${tripCrowd.dayType.toLowerCase()}).</small></div>
     <div class="divider"></div>
     <div class="meta-block">
       <div class="k">Places added to plan</div>
@@ -94,18 +197,36 @@ function renderSelectedModeCard(d){
         ? `<div style="font-size:13px;color:var(--text-soft);margin-top:6px;">None yet — tap a nearby place below to add it.</div>`
         : `<ul class="connecting-list" style="margin-top:8px;">${[...added].map(n=>`<li><span class="conn-name">${n}</span></li>`).join('')}</ul><a class="route-plan-btn" href="${googleMapsDirectionsUrl(selectedPlaces)}" target="_blank" rel="noopener noreferrer">Open selected route in Google Maps ↗</a>`}
     </div>
-    <div class="trip-settings-summary"><span>${document.getElementById('trip-date')?.value || 'Date not set'}</span><span>${document.getElementById('trip-style')?.value || 'balanced'} trip</span>${document.getElementById('trip-constraint')?.value ? `<span>${escapeHtml(document.getElementById('trip-constraint').value)}</span>` : ''}</div>
-    <button class="save-trip-btn" onclick="savePlannerTrip('${d.id}')">Save this itinerary</button>
+    <div class="trip-settings-summary"><span>${document.getElementById('trip-date')?.value || 'Date not set'}</span><span>${document.getElementById('trip-style')?.value || 'balanced'} trip</span><span>${[...selectedInterests].filter(item=>item!=='all').length ? [...selectedInterests].filter(item=>item!=='all').map(item=>interestLabels[item].replace(/^.+?\s/,'')).join(', ') : 'all interests'}</span>${document.getElementById('trip-constraint')?.value ? `<span>${escapeHtml(document.getElementById('trip-constraint').value)}</span>` : ''}</div>
+    <button class="save-trip-btn" onclick="savePlannerTrip('${d.id}')">Save itinerary &amp; preferences</button>
     <p class="save-trip-note" id="save-trip-note"></p>
   `;
 }
 async function savePlannerTrip(destId){
   const d = destinations.find(x=>x.id===destId);
   const note = document.getElementById('save-trip-note');
+  const button = document.querySelector('.save-trip-btn');
+  if(!window.rahiApi?.configured()){
+    if(note) note.textContent = 'Saving is not connected yet. Add your Firebase configuration first.';
+    return;
+  }
+  if(!window.rahiApi.currentUser()){
+    if(note) note.textContent = 'Please log in or sign up to save this itinerary to your Profile.';
+    document.getElementById('login-btn')?.click();
+    return;
+  }
   try {
-    await window.rahiApi.saveTrip({destinationId:d.id, destinationName:d.name, travelMode:selectedMode[d.id], places:[...addedPlaces[d.id]], tripDate:document.getElementById('trip-date')?.value || null, travelStyle:document.getElementById('trip-style')?.value || 'balanced', constraints:document.getElementById('trip-constraint')?.value.trim() || '', interests:[...selectedInterests].filter(x=>x!=='all'), weatherSnapshot:{...d.weather}, crowdSnapshot:createCrowdSnapshot(d)});
-    note.textContent = 'Saved to your account.';
-  } catch (error) { if (note && window.rahiApi.currentUser()) note.textContent = error.message; }
+    if(button) { button.disabled = true; button.textContent = 'Saving itinerary…'; }
+    const travelStyle = document.getElementById('trip-style')?.value || 'balanced';
+    await loadPlannerDateWeather(d);
+    const weatherSnapshot = plannerWeatherForDate(d);
+    const crowdSnapshot = crowdForTripDate(d);
+    const preferenceImpact = { style:travelStyle, multiplier:travelStyleInfo(travelStyle).multiplier, estimatedDailyPerPerson:plannerDailyEstimate(d, travelStyle), selectedTransport:{mode:selectedMode[d.id], duration:d.travelOptions.find(option => option.mode === selectedMode[d.id])?.duration || '', cost:d.travelOptions.find(option => option.mode === selectedMode[d.id])?.cost || ''}, summary:travelStyleInfo(travelStyle).summary };
+    const tripDateOutlook = { date:selectedTripDate(), weather:weatherSnapshot, crowd:crowdSnapshot };
+    await window.rahiApi.saveTrip({destinationId:d.id, destinationName:d.name, travelMode:selectedMode[d.id], places:[...addedPlaces[d.id]], tripDate:selectedTripDate(), travelStyle, estimatedDailyPerPerson:preferenceImpact.estimatedDailyPerPerson, travelPreferenceImpact:preferenceImpact, tripDateOutlook, constraints:document.getElementById('trip-constraint')?.value.trim() || '', interests:[...selectedInterests].filter(x=>x!=='all'), weatherSnapshot, crowdSnapshot});
+    note.textContent = 'Saved to your Profile — itinerary, places and preferences are included.';
+  } catch (error) { if (note) note.textContent = `Could not save: ${error.message}`; }
+  finally { if(button) { button.disabled = false; button.textContent = 'Save itinerary & preferences'; } }
 }
 function createCrowdSnapshot(d){
   const hourly = d.hourly;
@@ -185,6 +306,81 @@ function renderConnectingGrid(d){
       event.stopPropagation();
       showDistanceFromUser(button, d.connecting[Number(button.dataset.idx)]);
     });
+  });
+}
+
+/* ============ LIVE NEARBY STAYS (OpenStreetMap) ============ */
+function hotelScopeFor(d){
+  if(hotelSearchScope === 'city') return { id:'city', name:`${d.name} city centre`, coords:d.coords, radius:6000 };
+  const place = d.connecting.find(item => item.name === hotelSearchScope);
+  return place ? { id:place.name, name:place.name, coords:place.coords, radius:3000 } : { id:'city', name:`${d.name} city centre`, coords:d.coords, radius:6000 };
+}
+function hotelTypeLabel(type){ return ({hotel:'Hotel',guest_house:'Guest house',hostel:'Hostel',resort:'Resort'})[type] || 'Stay'; }
+function hotelMapsUrl(hotel){ return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${hotel.name}, ${hotel.coords.lat}, ${hotel.coords.lon}`)}`; }
+function hotelSuggestion(hotel, style){
+  const type = hotel.type;
+  if(style === 'budget' && ['hostel','guest_house'].includes(type)) return 'Good match for a budget-conscious trip';
+  if(style === 'comfort' && ['hotel','resort'].includes(type)) return 'Good match for a comfort-focused trip';
+  if(style === 'balanced' && ['hotel','guest_house'].includes(type)) return 'Good match for a balanced trip';
+  return '';
+}
+function hotelPriority(hotel, style){
+  const preferred = style === 'budget' ? ['hostel','guest_house','hotel','resort'] : style === 'comfort' ? ['resort','hotel','guest_house','hostel'] : ['hotel','guest_house','resort','hostel'];
+  return preferred.indexOf(hotel.type) * 100 + hotel.distance;
+}
+function renderHotelCards(hotels, scope, style){
+  const sorted = [...hotels].sort((a,b) => hotelPriority(a, style) - hotelPriority(b, style));
+  return sorted.slice(0, 6).map(hotel => {
+    const suggestion = hotelSuggestion(hotel, style);
+    const details = [hotel.stars ? `${hotel.stars}★` : '', hotel.phone || '', hotel.website ? 'Website available' : ''].filter(Boolean).join(' · ');
+    return `<article class="hotel-card ${suggestion ? 'hotel-suggested' : ''}"><div class="hotel-card-top"><span class="hotel-type">${escapeHtml(hotelTypeLabel(hotel.type))}</span>${suggestion ? '<span class="hotel-match">Suggested</span>' : ''}</div><h3>${escapeHtml(hotel.name)}</h3><p>${hotel.distance.toFixed(1)} km from ${escapeHtml(scope.name)}</p>${details ? `<small>${escapeHtml(details)}</small>` : '<small>Contact details may be available on the map listing.</small>'}${suggestion ? `<strong>${escapeHtml(suggestion)}</strong>` : ''}<a href="${hotelMapsUrl(hotel)}" target="_blank" rel="noopener noreferrer">View on Google Maps ↗</a></article>`;
+  }).join('');
+}
+async function getNearbyHotels(scope){
+  const key = `${scope.coords.lat},${scope.coords.lon}:${scope.radius}`;
+  if(hotelResultsCache.has(key)) return hotelResultsCache.get(key);
+  if(hotelRequests.has(key)) return hotelRequests.get(key);
+  const query = `[out:json][timeout:18];nwr["tourism"~"^(hotel|guest_house|hostel|resort)$"](around:${scope.radius},${scope.coords.lat},${scope.coords.lon});out center tags 24;`;
+  const request = (async () => {
+    let lastError;
+    for(const endpoint of ['https://overpass.kumi.systems/api/interpreter', 'https://overpass-api.de/api/interpreter']){
+      try {
+        const response = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'}, body:`data=${encodeURIComponent(query)}`});
+        if(!response.ok) throw new Error(`Map data service returned ${response.status}`);
+        const data = await response.json();
+        const byId = new Map();
+        (data.elements || []).forEach(item => {
+          const lat = item.lat ?? item.center?.lat, lon = item.lon ?? item.center?.lon;
+          if(!lat || !lon || !item.tags?.name) return;
+          const hotel = { id:`${item.type}/${item.id}`, name:item.tags.name, type:item.tags.tourism, stars:item.tags.stars, phone:item.tags.phone || item.tags['contact:phone'], website:item.tags.website || item.tags['contact:website'], coords:{lat,lon}, distance:distanceInKm(scope.coords,{lat,lon}) };
+          if(!byId.has(hotel.id)) byId.set(hotel.id, hotel);
+        });
+        const hotels = [...byId.values()];
+        hotelResultsCache.set(key, hotels);
+        return hotels;
+      } catch(error) { lastError = error; }
+    }
+    throw lastError || new Error('Nearby stay data is unavailable');
+  })();
+  hotelRequests.set(key, request);
+  try { return await request; } finally { hotelRequests.delete(key); }
+}
+function renderHotelFinder(d){
+  const container = document.getElementById('hotel-finder'); if(!container) return;
+  const scope = hotelScopeFor(d);
+  const style = document.getElementById('trip-style')?.value || 'balanced';
+  const scopes = [{id:'city',name:`${d.name} city`}, ...d.connecting.map(place => ({id:place.name,name:place.name}))];
+  const cacheKey = `${scope.coords.lat},${scope.coords.lon}:${scope.radius}`;
+  const cached = hotelResultsCache.get(cacheKey);
+  container.innerHTML = `<div class="hotel-finder-head"><div><h3>Find a stay near your plan</h3><p>Live public listings from OpenStreetMap. Availability, prices and amenities must be confirmed with the property.</p></div><button type="button" class="hotel-refresh-btn" id="hotel-refresh-btn">Refresh</button></div><div class="hotel-scope-row">${scopes.map(item => `<button type="button" class="hotel-scope-chip ${scope.id===item.id?'active':''}" data-hotel-scope="${escapeHtml(item.id)}">${escapeHtml(item.name)}</button>`).join('')}</div><div class="hotel-results" id="hotel-results">${cached ? (cached.length ? renderHotelCards(cached, scope, style) : '<div class="hotel-empty">No named stays were found close to this location. Try the city option for a wider search.</div>') : '<div class="hotel-loading">Looking up nearby stays…</div>'}</div>`;
+  container.querySelectorAll('[data-hotel-scope]').forEach(button => button.addEventListener('click', () => { hotelSearchScope = button.dataset.hotelScope; renderHotelFinder(d); }));
+  container.querySelector('#hotel-refresh-btn').addEventListener('click', () => { hotelResultsCache.delete(cacheKey); renderHotelFinder(d); });
+  if(cached) return;
+  getNearbyHotels(scope).then(hotels => {
+    if(getCurrentDest() === d.id && hotelScopeFor(d).id === scope.id) renderHotelFinder(d);
+  }).catch(() => {
+    const results = document.getElementById('hotel-results');
+    if(results && getCurrentDest() === d.id) results.innerHTML = '<div class="hotel-empty">Nearby stay listings are temporarily unavailable. Please use Refresh in a moment, or try the city option.</div>';
   });
 }
 

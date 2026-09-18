@@ -52,6 +52,7 @@
       <div class="trip-tools-head"><div><h3>Personalise this trip</h3><p>Choose interests, a travel date and optional preferences to focus your itinerary.</p></div><button class="location-tool-btn" id="planner-location-btn" type="button">⌖ Use my location</button></div>
       <div class="trip-tool-fields"><label>Trip date<input id="trip-date" type="date"></label><label>Travel preference<select id="trip-style"><option value="balanced">Balanced</option><option value="budget">Budget-conscious</option><option value="comfort">Comfort-focused</option></select></label><label class="trip-constraint">Anything to consider?<input id="trip-constraint" type="text" maxlength="120" placeholder="e.g. avoid long walks, vegetarian food"></label></div>
       <div class="interest-row"><span>Interests</span><div id="interest-filters" class="interest-filters"></div></div>
+      <div class="trip-tools-actions"><button type="button" class="apply-preferences-btn" id="apply-preferences-btn">Apply preferences to places</button><button type="button" class="reset-preferences-btn" id="reset-preferences-btn">Reset</button><span id="preference-match-note" aria-live="polite"></span></div>
       <p class="trip-location-note" id="planner-location-note">Your location stays in this browser and is only used to calculate attraction distances.</p>
     </div>
     <div class="planner-grid">
@@ -70,6 +71,13 @@
       <p class="section-desc">Tap a card for details, distance and time needed — add the ones you want to your plan.</p>
     </div>
     <div class="conn-grid" id="conn-grid"></div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <h2 style="font-size:20px;">Stays nearby</h2>
+      <p class="section-desc">Explore nearby hotels and stays around the destination or an attraction. Suggestions adjust to your travel preference.</p>
+    </div>
+    <section class="card hotel-finder" id="hotel-finder" aria-live="polite"></section>
+    <p class="hotel-partner-link">Own a hotel, homestay or guest house? <a href="hotel-partner.html">Open the Accommodation Partner dashboard →</a></p>
 
     <div class="section-head" style="margin-top:34px;">
       <h2 style="font-size:20px;">Traveller reviews</h2>

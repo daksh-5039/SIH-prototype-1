@@ -1,0 +1,31 @@
+/* Private accommodation-partner profile and prototype demand guidance. */
+function partnerEstimate(destination){
+  const average = Math.round(destination.hourly.reduce((sum, value) => sum + value, 0) / destination.hourly.length);
+  const peak = Math.max(...destination.hourly);
+  const direction = destination.crowd === 'high' ? 'Rising visitor demand' : destination.crowd === 'low' ? 'Lower visitor demand' : 'Steady visitor demand';
+  return { average, peak, direction, cancellationRisk: destination.crowd === 'high' ? 12 : destination.crowd === 'low' ? 18 : 15 };
+}
+function partnerDashboard(destination, profile){
+  const signal = partnerEstimate(destination);
+  const availability = Number(profile?.availableRooms || 0), rooms = Number(profile?.totalRooms || 0);
+  const occupancy = rooms > 0 ? Math.max(0, Math.min(100, Math.round(((rooms - availability) / rooms) * 100))) : null;
+  return `<div class="partner-destination"><label>Planning destination<select id="partner-destination">${destinations.map(item => `<option value="${item.id}" ${item.id===destination.id?'selected':''}>${escapeHtml(item.name)}</option>`).join('')}</select></label><p>Destination selection changes the prototype planning guidance below.</p></div>
+  <div class="partner-metrics"><article><span>Visitor demand signal</span><strong>${signal.average}%</strong><small>${escapeHtml(signal.direction)} based on TouriSense’s crowd pattern</small></article><article><span>Busy-period signal</span><strong>${signal.peak}%</strong><small>Typical peak-hour pattern for ${escapeHtml(destination.name)}</small></article><article><span>Your room availability</span><strong>${occupancy === null ? 'Not added' : `${availability} / ${rooms}`}</strong><small>${occupancy === null ? 'Add room numbers below' : `${occupancy}% prototype occupancy from your own entry`}</small></article><article><span>Cancellation-risk estimate</span><strong>${signal.cancellationRisk}%</strong><small>Prototype estimate; not based on reservations</small></article></div>
+  <section class="card partner-actions"><h3>Suggested actions</h3><div class="partner-action-grid"><article><span>📈</span><h4>${escapeHtml(signal.direction)}</h4><p>Consider a limited-time stay package paired with breakfast or a local experience.</p></article><article><span>📣</span><h4>Local marketing opportunity</h4><p>Highlight an event, food walk or heritage experience that visitors can reach from your property.</p></article><article><span>💚</span><h4>Local-first opportunity</h4><p>Share verified local hosts or small businesses that complement your guest experience.</p></article></div></section>
+  <section class="card partner-form-card"><h3>Your accommodation profile</h3><p>Saved privately under your signed-in TouriSense account. Do not add guest names, booking references or payment details.</p><form id="partner-profile-form"><div class="partner-form-grid"><label>Property name<input name="name" required maxlength="90" value="${escapeHtml(profile?.name || '')}" placeholder="e.g. Lake View Homestay"></label><label>Stay type<select name="type"><option value="smallHotel">Small hotel</option><option value="homestay">Homestay</option><option value="guestHouse">Guest house</option><option value="ecoStay">Eco stay</option></select></label><label>Total rooms<input name="totalRooms" required min="1" max="1000" type="number" value="${escapeHtml(profile?.totalRooms || '')}" placeholder="e.g. 12"></label><label>Rooms currently available<input name="availableRooms" required min="0" max="1000" type="number" value="${escapeHtml(profile?.availableRooms || '')}" placeholder="e.g. 5"></label></div><label class="partner-offer">Local offer (optional)<input name="localOffer" maxlength="160" value="${escapeHtml(profile?.localOffer || '')}" placeholder="e.g. Breakfast + Old City heritage walk"></label><button type="submit" class="calc-btn">Save accommodation profile</button><p class="partner-form-note" id="partner-form-note"></p></form></section>`;
+}
+async function renderHotelPartner(){
+  const container = document.getElementById('partner-content'); if(!container) return;
+  if(!window.rahiApi?.currentUser()) { container.innerHTML = `<section class="card partner-login"><h3>Log in to use partner tools</h3><p>A sign-in keeps your property profile private and lets you update it later.</p><button class="calc-btn" id="partner-login-btn">Log in / Sign up</button></section>`; document.getElementById('partner-login-btn').addEventListener('click', () => document.getElementById('login-btn')?.click()); return; }
+  const destination = destinations.find(item => item.id === getCurrentDest()) || destinations[0];
+  try { const profile = await window.rahiApi.getHotelPartnerProfile(); container.innerHTML = partnerDashboard(destination, profile); const type = container.querySelector('[name="type"]'); if(profile?.type) type.value = profile.type; container.querySelector('#partner-destination').addEventListener('change', event => { setCurrentDest(event.target.value); renderHotelPartner(); }); container.querySelector('#partner-profile-form').addEventListener('submit', savePartnerProfile); }
+  catch(error) { container.innerHTML = `<section class="card partner-login"><h3>Partner tools are unavailable</h3><p>Please refresh. If this continues, publish the latest Firestore rules.</p></section>`; }
+}
+async function savePartnerProfile(event){
+  event.preventDefault(); const form = event.currentTarget, data = new FormData(form), note = document.getElementById('partner-form-note'), button = form.querySelector('button[type="submit"]');
+  const totalRooms = Number(data.get('totalRooms')), availableRooms = Number(data.get('availableRooms'));
+  if(availableRooms > totalRooms) { note.textContent = 'Available rooms cannot be greater than total rooms.'; return; }
+  try { button.disabled = true; button.textContent = 'Saving…'; await window.rahiApi.saveHotelPartnerProfile({ name:data.get('name').trim(), type:data.get('type'), totalRooms, availableRooms, localOffer:data.get('localOffer').trim(), destinationId:getCurrentDest() }); note.textContent = 'Saved privately to your account.'; }
+  catch(error) { note.textContent = error.message || 'Could not save the property profile.'; }
+  finally { button.disabled = false; button.textContent = 'Save accommodation profile'; }
+}

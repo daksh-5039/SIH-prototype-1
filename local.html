@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Discoveries — TouriSense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Touri<span>Sense</span></span></div>
+    <nav class="navlinks" id="navlinks">
+      <button data-view="home">Home</button><button data-view="planner">Trip Planner</button><button data-view="crowd">Crowd &amp; Peak Hours</button><button data-view="expense">Expense Calculator</button><button data-view="weather">Weather Advisory</button>
+    </nav>
+    <button class="header-cta" onclick="navigateTo('planner')">Plan a trip</button>
+  </div>
+</header>
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer"><div class="drawer-head"><div class="brand"><div class="brand-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg></div><span class="brand-name">Touri<span>Sense</span></span></div><button class="drawer-close" id="drawerClose">✕</button></div><nav class="drawer-nav" id="drawerNav"><button data-view="home"><span class="dot"></span>Home</button><button data-view="planner"><span class="dot"></span>Trip Planner</button><button data-view="crowd"><span class="dot"></span>Crowd &amp; Peak Hours</button><button data-view="expense"><span class="dot"></span>Expense Calculator</button><button data-view="weather"><span class="dot"></span>Weather Advisory</button></nav></div>
+
+<section class="view active" id="view-local">
+  <div class="wrap section-top">
+    <div class="local-hero">
+      <div><div class="hero-eyebrow">LOCAL TOURISM NETWORK</div><h2>Discover what’s happening nearby.</h2><p>Find local events, shops and small experiences shared by people in the destination. Help tourism reach local communities, not just major attractions.</p></div>
+      <button class="local-host-btn" id="open-listing-form">+ Share a local listing</button>
+    </div>
+    <div class="local-notice"><strong>Community listings</strong><span>Listings are shared by logged-in users and are not verified by TouriSense. Confirm details directly with the host before visiting.</span></div>
+    <div class="dest-scroller" id="local-chips"></div>
+    <div class="local-filter-row" id="local-filter-row"><button class="place-scope-chip active" data-type="all">All</button><button class="place-scope-chip" data-type="event">Events</button><button class="place-scope-chip" data-type="shop">Shops</button><button class="place-scope-chip" data-type="experience">Experiences</button></div>
+    <div id="listing-form-wrap" class="local-listing-form card" hidden></div>
+    <div class="section-head" style="margin-top:26px;"><h2 style="font-size:20px;">Local discoveries in <span id="local-destination-name"></span></h2><p class="section-desc">Open a listing to find it on Google Maps.</p></div>
+    <div class="local-listing-grid" id="local-listing-grid"></div>
+  </div>
+</section>
+<footer><div class="wrap footer-inner"><p>TouriSense — SIH prototype. Local listings are community-submitted.</p><p>Built with the frontend, wired for a live backend.</p></div></footer>
+<script src="js/data.js"></script><script src="js/nav.js"></script><script src="js/common.js"></script><script src="js/local.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script><script src="js/firebase-config.js"></script><script src="js/auth.js"></script>
+<script>initNav('local'); renderLocalDiscoveries();</script>
+</body>
+</html>

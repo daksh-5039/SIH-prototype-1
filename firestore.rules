@@ -6,6 +6,7 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
       match /trips/{tripId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
       match /expenses/{expenseId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+      match /hotelPartner/{profileId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
       match /chats/{chatId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
         match /messages/{messageId} { allow read, write: if request.auth != null && request.auth.uid == userId; }
@@ -23,6 +24,19 @@ service cloud.firestore {
       allow create, update: if request.auth != null && request.auth.uid == userId
         && request.resource.data.level in ['low', 'medium', 'high'];
       allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    match /localListings/{listingId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid
+        && request.resource.data.destinationId is string
+        && request.resource.data.title is string && request.resource.data.title.size() >= 3 && request.resource.data.title.size() <= 90
+        && request.resource.data.details is string && request.resource.data.details.size() >= 10 && request.resource.data.details.size() <= 700
+        && request.resource.data.location is string && request.resource.data.location.size() >= 3 && request.resource.data.location.size() <= 160
+        && request.resource.data.when is string && request.resource.data.when.size() <= 70
+        && request.resource.data.hostName is string && request.resource.data.hostName.size() <= 80
+        && request.resource.data.type in ['event', 'shop', 'experience']
+        && request.resource.data.mapUrl is string && request.resource.data.mapUrl.matches('https://www\\.google\\.com/maps/.*');
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
   }
 }

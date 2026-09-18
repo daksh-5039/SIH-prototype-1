@@ -120,6 +120,46 @@ const destinations = [
     baseCost:{stay:0.30,travel:0.20,food:0.24,activities:0.26}}
 ];
 
+/* Location-wise prototype discoveries supplied for the Local Discoveries view.
+   These are not user-submitted listings and should be verified before a real launch. */
+const LOCAL_DISCOVERY_SEEDS = [
+  ['taj','Agra Heritage Walk','Kinari Bazaar / Agra Fort area','experience','Old-city lanes, markets and heritage walk'],
+  ['taj','Sadar Bazaar Handicraft Trail','Sadar Bazaar','shop','Local handicrafts, leather goods and souvenirs'],
+  ['taj','Yamuna Riverside Evening Walk','Mehtab Bagh / Yamuna riverfront','experience','Relaxed evening riverside experience'],
+  ['taj','Agra Food Walk','Sadar Bazaar / Raja Mandi','experience','Local chaat, petha and traditional food'],
+  ['taj','Marble Craft Workshop','Fatehabad Road craft area','experience','Traditional marble inlay craft demonstration'],
+  ['jaipur','Blue Pottery Workshop','Shilpgram / Amer area','experience','Hands-on traditional blue pottery experience'],
+  ['jaipur','Pink City Food Walk','Bapu Bazaar / MI Road','experience','Explore local snacks and Rajasthani food'],
+  ['jaipur','Johari Bazaar Jewellery Walk','Johari Bazaar','shop','Local jewellery and traditional handicrafts'],
+  ['jaipur','Block Printing Workshop','Sanganer','experience','Traditional textile block-printing experience'],
+  ['jaipur','Folk Music Evening','Kishanpole / Pink City area','event','Local music and cultural performance'],
+  ['bhopal','Old Bhopal Food Walk','Chowk Bazaar / Old City','experience','Traditional food and old-city streets'],
+  ['bhopal','Tribal Art & Craft Visit','TT Nagar / local craft area','experience','Discover regional tribal art and handicrafts'],
+  ['bhopal','Upper Lake Sunset Experience','Upper Lake / Boat Club','experience','Lakeside sunset and leisure experience'],
+  ['bhopal','Handicraft Market','Gauhar Mahal area','shop','Local crafts, textiles and souvenirs'],
+  ['bhopal','Local Cultural Evening','Bharat Bhavan area','event','Local music, art and cultural activities'],
+  ['goa','Fontainhas Heritage Walk','Fontainhas, Panaji','experience','Colourful heritage streets and architecture'],
+  ['goa','Local Goan Food Experience','Panjim / Fontainhas','experience','Traditional Goan food and local eateries'],
+  ['goa','Sunset Kayaking Experience','Chorao / nearby backwaters','experience','Evening kayaking through coastal waterways'],
+  ['goa','Anjuna Local Market','Anjuna','shop','Handicrafts, clothing and local products'],
+  ['goa','Live Music Night','Assagao / Anjuna area','event','Local live music at a small venue'],
+  ['kerala','Village Canoe Experience','Kuttanad, Alappuzha','experience','Explore narrow backwater canals by canoe'],
+  ['kerala','Kerala Cooking Experience','Kumarakom','experience','Learn how traditional Kerala dishes are prepared'],
+  ['kerala','Village Heritage Experience','Kumbalangi','experience','Explore village life and traditional practices'],
+  ['kerala','Coir Craft Workshop','Alappuzha','experience','See traditional coconut-fibre craft production'],
+  ['kerala','Local Handicraft Market','Alappuzha town','shop','Locally produced Kerala handicrafts'],
+  ['manali','Old Manali Cafe Walk','Old Manali','experience','Discover small cafes and local hangouts'],
+  ['manali','Himachali Food Experience','Vashisht','experience','Try traditional Himachali dishes'],
+  ['manali','Village Homestay Experience','Naggar','experience','Experience local culture through a village stay'],
+  ['manali','Wool & Craft Shop','Mall Road / Old Manali','shop','Locally made woollens and handicrafts'],
+  ['manali','Music & Cultural Evening','Old Manali','event','Small local music and cultural performance'],
+  ['varanasi','Old City Heritage Walk','Godowlia / Vishwanath Gali','experience','Explore historic lanes and local heritage'],
+  ['varanasi','Banarasi Silk Weaving Experience','Madanpura / Lallapura','experience','See traditional Banarasi silk weaving'],
+  ['varanasi','Local Street Food Walk','Kachori Gali / Godowlia','experience','Explore local snacks and traditional food'],
+  ['varanasi','Cultural Evening','Assi Ghat','event','Local music, art and cultural performances'],
+  ['varanasi','Banarasi Handicraft Market','Thatheri Bazaar','shop','Discover local textiles, metalwork and crafts']
+].map(([destinationId,title,location,type,details]) => ({ destinationId,title,location,type,details,seed:true,verification:'Prototype listing' }));
+
 /* ============ CURRENT DESTINATION (shared across pages) ============
    Selecting a destination on one page (e.g. Home) should carry over
    when the visitor is taken to another page (e.g. Trip Planner), so
