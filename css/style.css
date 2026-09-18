@@ -1,3 +1,4 @@
+@import "reporter.css";
   :root{
     --primary:#0a3fa3;
     --primary-dark:#062b73;
@@ -501,7 +502,174 @@
   .brand-mark{background:linear-gradient(135deg,var(--primary),var(--accent));}
   @media(max-width:760px){.site-header{position:sticky;}.header-inner{padding:10px 14px;}.brand-mark{width:36px;height:36px;}.hero{min-height:0;padding:46px 0 30px;}.hero h1{font-size:clamp(38px,12vw,54px);}.search-card{border-radius:17px;}.feature-grid,.hotel-results,.partner-metrics,.partner-action-grid{grid-template-columns:1fr;}.quick-panel,.card,.chart-card{border-radius:15px;}.local-hero,.partner-hero{border-radius:16px;}}
   /* Shared adaptive header for every standalone TouriSense page. */
-  .adaptive-header .header-inner{max-width:1540px;min-height:70px;align-items:center;flex-wrap:nowrap;gap:12px}.adaptive-header .brand{margin-right:4px;flex:none}.adaptive-logo{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#67e8f9,#a78bfa);color:#06101c;font-size:13px;font-weight:950}.adaptive-brand-copy{display:grid;line-height:1.05;gap:3px}.adaptive-brand-copy strong{font-size:16px;color:var(--text)}.adaptive-brand-copy small{font-size:11px;font-weight:750;color:var(--text-soft)}.adaptive-header .adaptive-navlinks{margin:0;flex:1;min-width:0;display:flex;justify-content:center;align-items:center;gap:3px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.adaptive-header .adaptive-navlinks::-webkit-scrollbar{display:none}.adaptive-header .adaptive-navlinks button{white-space:nowrap;font-size:12px;padding:8px 9px}.header-quick-links{display:flex;align-items:center;gap:4px;flex:none}.header-quick-links button{padding:8px 9px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text-soft);font:inherit;font-size:12px;white-space:nowrap}.header-quick-links button:hover{background:#10233c;color:var(--text);border-color:var(--border)}.adaptive-header .auth-area{margin-left:0;gap:5px;display:flex;align-items:center;flex:none}.adaptive-header .account-btn{padding:8px 9px;font-size:12px;white-space:nowrap}.adaptive-header .hamburger-btn{display:none}@media(max-width:760px){.adaptive-header .header-inner{flex-wrap:nowrap;padding:10px 13px}.adaptive-header .adaptive-navlinks,.adaptive-header .header-quick-links{display:none}.adaptive-header .hamburger-btn{display:flex;order:4;margin-left:4px}.adaptive-header .brand{margin-right:auto}.adaptive-header .auth-area .account-btn:not(#login-btn):not(#logout-btn){display:none}.adaptive-header .account-btn{padding:7px 8px;font-size:11px}.adaptive-header .adaptive-logo{width:34px;height:34px}.adaptive-brand-copy strong{font-size:15px}}
+  .adaptive-header .header-inner{max-width:1540px;min-height:70px;align-items:center;flex-wrap:nowrap;gap:12px}.adaptive-header .brand{margin-right:4px;flex:none}.adaptive-logo{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#67e8f9,#a78bfa);color:#06101c;font-size:13px;font-weight:950}.adaptive-brand-copy{display:grid;line-height:1.05;gap:3px}.adaptive-brand-copy strong{font-size:16px;color:var(--text)}.adaptive-brand-copy small{font-size:11px;font-weight:750;color:var(--text-soft)}.adaptive-header .adaptive-navlinks{margin:0;flex:1;min-width:0;display:flex;justify-content:center;align-items:center;gap:3px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.adaptive-header .adaptive-navlinks::-webkit-scrollbar{display:none}.adaptive-header .adaptive-navlinks button{white-space:nowrap;font-size:12px;padding:8px 9px}.header-quick-links{display:flex;align-items:center;gap:4px;flex:none}.header-quick-links button{padding:8px 9px;border:0;border-radius:10px;background:transparent;color:var(--text-soft);font:inherit;font-size:12px;white-space:nowrap}.header-quick-links button:hover{background:rgba(255,255,255,.07);color:var(--text);}.adaptive-header .auth-area{margin-left:0;gap:5px;display:flex;align-items:center;flex:none}.adaptive-header .account-btn{padding:8px 9px;font-size:12px;white-space:nowrap}.adaptive-header .hamburger-btn{display:none}@media(max-width:760px){.adaptive-header .header-inner{flex-wrap:nowrap;padding:10px 13px}.adaptive-header .adaptive-navlinks,.adaptive-header .header-quick-links{display:none}.adaptive-header .hamburger-btn{display:flex;order:4;margin-left:4px}.adaptive-header .brand{margin-right:auto}.adaptive-header .auth-area .account-btn:not(#login-btn):not(#logout-btn){display:none}.adaptive-header .account-btn{padding:7px 8px;font-size:11px}.adaptive-header .adaptive-logo{width:34px;height:34px}.adaptive-brand-copy strong{font-size:15px}}
 
   /* Final dark-surface pass: legacy white cards, panels and footer must not leak into the adaptive theme. */
-  footer{background:#07111f!important;border-top:1px solid var(--border)!important}.footer-inner p{color:var(--text-soft)!important}.card,.chart-card,.quick-panel,.travel-option,.conn-card,.hotel-finder,.partner-form-card,.partner-metrics article,.partner-action-grid article,.local-listing-card,.saved-itinerary-card,.saved-destination-card,.profile-item,.profile-welcome{background:#0d1b2d!important;color:var(--text)!important;border-color:var(--border)!important}.local-listing-card{box-shadow:var(--shadow)!important}.local-listing-card h3,.local-listing-card h4,.local-listing-card strong,.local-listing-card .local-listing-top{color:var(--text)!important}.local-listing-card>p,.local-listing-card .local-listing-info,.local-listing-card .local-listing-foot,.local-listing-card .local-listing-top>span:last-child{color:var(--text-soft)!important}.local-listing-card .local-listing-foot a{background:#10233c!important;color:var(--primary)!important;border-color:var(--primary)!important}.local-listing-card .local-type{color:#06101c!important}.local-listing-card .local-type.event{background:rgba(251,113,133,.18)!important;color:#fecdd3!important}.local-listing-card .local-type.shop{background:rgba(251,191,36,.18)!important;color:#fde68a!important}.local-listing-card .local-type.experience{background:rgba(94,234,212,.16)!important;color:#99f6e4!important}.local-empty,.hotel-empty,.hotel-loading,.video-review-empty{background:#0d1b2d!important;color:var(--text-soft)!important;border-color:var(--border)!important}.dest-chip,.interest-chip,.place-scope-chip,.hotel-scope-chip,.weather-choice button,.crowd-report-actions button,.view-more-itineraries{background:#091729!important;color:var(--text-soft)!important;border-color:var(--border)!important}.dest-chip.active,.interest-chip.active,.place-scope-chip.active,.hotel-scope-chip.active{color:var(--text)!important}.local-listing-form,.trip-tools,.partner-login{background:#0d1b2d!important;color:var(--text)!important;border-color:var(--border)!important}.local-listing-form h3,.local-listing-form label,.local-form-head h3,.partner-login h3{color:var(--text)!important}.local-listing-form p,.local-form-intro,.local-listing-form label,.partner-login p{color:var(--text-soft)!important}.local-listing-form input,.local-listing-form select,.local-listing-form textarea,.partner-form-card input,.partner-form-card select,.chat-form textarea,.field input,.field select{background:#081526!important;color:var(--text)!important;border-color:var(--border)!important}.local-host-btn,.partner-hero-link{background:linear-gradient(135deg,var(--primary),#60a5fa)!important;color:#06101c!important}.weather-advice,.alert-box,.partner-disclaimer,.local-notice{background:rgba(251,191,36,.10)!important;color:#fde68a!important;border-color:rgba(251,191,36,.45)!important}.alt-suggest .alt-item,.itinerary-preferences>div,.itinerary-saved-outlook>div{background:#091729!important;color:var(--text)!important;border-color:var(--border)!important}
+  footer{background:#07111f!important;border-color:var(--border)!important}.footer-inner p{color:var(--text-soft)!important}.card,.chart-card,.quick-panel,.travel-option,.conn-card,.hotel-finder,.partner-form-card,.partner-metrics article,.partner-action-grid article,.local-listing-card,.saved-itinerary-card,.saved-destination-card,.profile-item,.profile-welcome{background:#0d1b2d!important;color:var(--text)!important;border-color:var(--border)!important}.local-listing-card{box-shadow:var(--shadow)!important}.local-listing-card h3,.local-listing-card h4,.local-listing-card strong,.local-listing-card .local-listing-top{color:var(--text)!important}.local-listing-card>p,.local-listing-card .local-listing-info,.local-listing-card .local-listing-foot,.local-listing-card .local-listing-top>span:last-child{color:var(--text-soft)!important}.local-listing-card .local-listing-foot a{background:#10233c!important;color:var(--primary)!important;border-color:var(--primary)!important}.local-listing-card .local-type{color:#06101c!important}.local-listing-card .local-type.event{background:rgba(251,113,133,.18)!important;color:#fecdd3!important}.local-listing-card .local-type.shop{background:rgba(251,191,36,.18)!important;color:#fde68a!important}.local-listing-card .local-type.experience{background:rgba(94,234,212,.16)!important;color:#99f6e4!important}.local-empty,.hotel-empty,.hotel-loading,.video-review-empty{background:#0d1b2d!important;color:var(--text-soft)!important;border-color:var(--border)!important}.dest-chip,.interest-chip,.place-scope-chip,.hotel-scope-chip,.weather-choice button,.crowd-report-actions button,.view-more-itineraries{background:#091729!important;color:var(--text-soft)!important;border-color:var(--border)!important}.dest-chip.active,.interest-chip.active,.place-scope-chip.active,.hotel-scope-chip.active{color:var(--text)!important}.local-listing-form,.trip-tools,.partner-login{background:#0d1b2d!important;color:var(--text)!important;border-color:var(--border)!important}.local-listing-form h3,.local-listing-form label,.local-form-head h3,.partner-login h3{color:var(--text)!important}.local-listing-form p,.local-form-intro,.local-listing-form label,.partner-login p{color:var(--text-soft)!important}.local-listing-form input,.local-listing-form select,.local-listing-form textarea,.partner-form-card input,.partner-form-card select,.chat-form textarea,.field input,.field select{background:#081526!important;color:var(--text)!important;border-color:var(--border)!important}.local-host-btn,.partner-hero-link{background:linear-gradient(135deg,var(--primary),#60a5fa)!important;color:#06101c!important}.weather-advice,.alert-box,.partner-disclaimer,.local-notice{background:rgba(251,191,36,.10)!important;color:#fde68a!important;border-color:rgba(251,191,36,.45)!important}.alt-suggest .alt-item{background:#091729!important;color:var(--text)!important;border-color:var(--border)!important}
+  .itinerary-preferences,.itinerary-saved-outlook{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))!important;gap:10px!important;margin-bottom:10px!important;}
+  .itinerary-preferences>div,.itinerary-saved-outlook>div{background:#071220!important;border:1px solid #1b2e46!important;border-radius:12px!important;padding:12px 14px!important;display:flex!important;flex-direction:column!important;gap:4px!important;}
+  .itinerary-preferences>div span,.itinerary-saved-outlook>div span{font-size:11px!important;font-weight:700!important;color:#94a3b8!important;text-transform:uppercase!important;letter-spacing:0.5px!important;}
+  .itinerary-preferences>div strong,.itinerary-saved-outlook>div strong{font-size:13.5px!important;font-weight:700!important;color:#edf5ff!important;}
+  .delete-itinerary-btn{background:rgba(239,68,68,.12)!important;color:#fca5a5!important;border:1px solid rgba(239,68,68,.3)!important;padding:5px 12px!important;border-radius:8px!important;font-size:12px!important;font-weight:800!important;cursor:pointer!important;}
+
+/* ============================================================
+   MOBILE RESPONSIVENESS (Screens <= 768px & <= 480px)
+   Keeps laptop & desktop layouts 100% identical.
+   ============================================================ */
+@media (max-width: 768px) {
+  html, body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Touch-friendly inputs to prevent iOS Safari auto-zoom */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Sticky site header & compact layout */
+  .site-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2000 !important;
+  }
+  .header-inner {
+    padding: 10px 14px !important;
+    gap: 10px !important;
+  }
+
+  /* Hamburger & Drawer Navigation */
+  .hamburger-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+  }
+  .mobile-drawer {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 290px !important;
+    max-width: 85vw !important;
+    background: #091729 !important;
+    border-right: 1px solid var(--border, #233a58) !important;
+    z-index: 9999 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 16px !important;
+    overflow-y: auto !important;
+  }
+  .mobile-drawer.open {
+    transform: translateX(0) !important;
+  }
+  .drawer-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(4px) !important;
+    z-index: 9998 !important;
+    display: none !important;
+  }
+  .drawer-overlay.open {
+    display: block !important;
+  }
+  .drawer-head {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-bottom: 14px !important;
+    margin-bottom: 16px !important;
+    border-bottom: 1px solid #1f3552 !important;
+  }
+  .drawer-close {
+    background: transparent !important;
+    border: 0 !important;
+    color: #9eb1ca !important;
+    font-size: 22px !important;
+    cursor: pointer !important;
+  }
+  .drawer-nav {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .drawer-nav button {
+    width: 100% !important;
+    text-align: left !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: #9eb1ca !important;
+  }
+  .drawer-nav button.active, .drawer-nav button:hover {
+    background: #10233c !important;
+    color: #edf5ff !important;
+    border-color: #233a58 !important;
+  }
+
+  /* Grid Stack Rules for Mobile */
+  .hero, .planner, .cards, .market, .safety, .trip-layout, .chat-wrap,
+  .partner-metrics, .partner-action-grid, .partner-form-grid,
+  .local-listing-grid, .hotel-grid, .hotel-results, .feature-grid,
+  .qp-grid, .qp-places-grid, .stats, .crowd-cards {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Full Width Cards & Buttons */
+  .hero-card, .search-card, .panel, .card, .chart-card, .quick-panel, .local-hero, .partner-hero {
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+  }
+  .search-row {
+    flex-direction: column !important;
+  }
+  .search-go, .calc-btn, .local-host-btn, .partner-hero-link {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Auth & Dialog Modals */
+  .auth-dialog, .tourisense-login-card {
+    width: 94vw !important;
+    max-width: 440px !important;
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 32px !important;
+    line-height: 1.1 !important;
+    letter-spacing: -1px !important;
+  }
+  .hero-sub {
+    font-size: 13.5px !important;
+  }
+  .auth-role-tabs {
+    flex-direction: flex-wrap !important;
+  }
+  .auth-role-tab {
+    flex: 1 1 45% !important;
+    justify-content: center !important;
+  }
+  .ground-modal-dialog {
+    width: 96vw !important;
+    padding: 0 !important;
+    border-radius: 16px !important;
+  }
+}
+

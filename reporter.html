@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verified Local Reporter Portal — TouriSense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/reporter.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2C7.6 2 4 5.6 4 10c0 6.4 8 12 8 12s8-5.6 8-12c0-4.4-3.6-8-8-8z" fill="#fff"/><circle cx="12" cy="10" r="3.2" fill="#ff6141"/></svg>
+      </div>
+      <span class="brand-name">Touri<span>Sense</span></span>
+    </div>
+    <nav class="navlinks" id="navlinks">
+      <button data-view="home">Home</button>
+      <button data-view="planner">Trip Planner</button>
+      <button data-view="crowd">Crowd &amp; Peak Hours</button>
+      <button data-view="expense">Expense Calculator</button>
+      <button data-view="weather">Weather Advisory</button>
+    </nav>
+    <div id="auth-area" class="auth-area"></div>
+  </div>
+</header>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="drawer-head">
+    <div class="brand"><span class="brand-name">Touri<span>Sense</span></span></div>
+    <button class="drawer-close" id="drawerClose">✕</button>
+  </div>
+  <nav class="drawer-nav" id="drawerNav">
+    <button data-view="home"><span class="dot"></span>Home</button>
+    <button data-view="planner"><span class="dot"></span>Trip Planner</button>
+    <button data-view="crowd"><span class="dot"></span>Crowd &amp; Peak Hours</button>
+    <button data-view="expense"><span class="dot"></span>Expense Calculator</button>
+    <button data-view="weather"><span class="dot"></span>Weather Advisory</button>
+  </nav>
+</div>
+
+<!-- Screenshot 3: Verified Local Reporter Portal Main Screen -->
+<main class="wrap reporter-portal-view">
+  
+  <div class="reporter-eyebrow-badge">
+    <span class="role-green-dot"></span> Ground Intelligence Network
+  </div>
+
+  <div class="reporter-page-head">
+    <h1>Verified Local Reporter Portal</h1>
+    <p>Real-time, location-verified ground observations from certified reporters physically present at Bhopal destinations.</p>
+  </div>
+
+  <!-- Dashboard Main Navy Card -->
+  <section class="reporter-card-main">
+    
+    <!-- Top Row: Reporter identity & Assigned Location Selector -->
+    <div class="reporter-top-info">
+      <div class="rep-user-info">
+        <div class="rep-avatar-circle">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <div class="rep-user-text">
+          <h3 id="repName">ramesh guide</h3>
+          <div class="rep-badges-row">
+            <span class="rep-id-tag" id="repId">ID: GV102</span>
+            <span class="rep-verified-pill">✓ Verified Reporter</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rep-location-selector">
+        <label for="assignedLocationSelect" class="rep-loc-label">Assigned Location:</label>
+        <select id="assignedLocationSelect" class="rep-loc-select">
+          <option value="upper-lake">📍 Upper Lake (Bhojtal)</option>
+          <option value="van-vihar">📍 Van Vihar National Park</option>
+          <option value="tribal-museum">📍 Tribal Museum</option>
+          <option value="taj-ul-masajid">📍 Taj-ul-Masajid</option>
+          <option value="bhojpur">📍 Bhojpur Temple</option>
+          <option value="sanchi">📍 Sanchi Stupa</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 4 Metrics Grid -->
+    <div class="reporter-stats-grid">
+      <div class="rep-stat-box">
+        <div class="rep-stat-header"><span>📍</span> Assigned Destination</div>
+        <div class="rep-stat-value" id="statAssignedName">Upper Lake (Bhojtal)</div>
+        <div class="rep-stat-sub" id="statAssignedCity">Bhopal, MP</div>
+      </div>
+
+      <div class="rep-stat-box">
+        <div class="rep-stat-header"><span class="role-green-dot"></span> GPS Status</div>
+        <div class="rep-stat-value" style="color:#10b981;">Ready</div>
+        <div class="rep-stat-sub">Geofence radius: 2.5 km</div>
+      </div>
+
+      <div class="rep-stat-box">
+        <div class="rep-stat-header"><span>🕒</span> Last Update</div>
+        <div class="rep-stat-value" id="statLastUpdate">12 mins ago</div>
+        <div class="rep-stat-sub" id="statAcceptedCount">Today's Accepted: 3</div>
+      </div>
+    </div>
+
+    <!-- Bottom Action Buttons -->
+    <div class="reporter-actions-row">
+      <button type="button" class="btn-submit-ground" id="btnOpenGroundSubmit">
+        <span>🏷️</span> SUBMIT LIVE GROUND UPDATE
+      </button>
+      <button type="button" class="btn-admin-review" id="btnAdminReview">
+        <span>🛡️</span> Admin Review Panel
+      </button>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- Multi-Step Live Ground Update Submission Modal (Screenshots 4, 5, 1) -->
+<div class="ground-modal-backdrop" id="groundUpdateModal" aria-hidden="true">
+  <div class="ground-modal-dialog" role="dialog" aria-modal="true" aria-label="Live Ground Update Submission">
+    
+    <!-- Modal Head -->
+    <div class="ground-modal-head">
+      <h2 class="ground-modal-title">
+        <span>🚀</span> Live Ground Update Submission — <span id="modalLocationTitle">Upper Lake (Bhojtal)</span>
+      </h2>
+      <button type="button" class="ground-close-btn" id="modalCloseBtn" aria-label="Close">✕</button>
+    </div>
+
+    <!-- 4-Step Progress Indicator -->
+    <div class="ground-stepper-wrap">
+      <div class="ground-stepper-line"></div>
+      <div class="ground-steps">
+        <div class="g-step-node active" id="step-node-1">1</div>
+        <div class="g-step-node" id="step-node-2">2</div>
+        <div class="g-step-node" id="step-node-3">3</div>
+        <div class="g-step-node" id="step-node-4">4</div>
+      </div>
+    </div>
+
+    <!-- Modal Step Contents -->
+    <div class="ground-modal-body">
+      
+      <!-- STEP 1: VERIFY PHYSICAL LOCATION (Screenshot 4) -->
+      <div id="modal-step-pane-1">
+        <div class="step-center-head">
+          <h3>Step 1: 📍 Verify Physical Location</h3>
+          <p id="step1Subtitle">Checking browser Geolocation API against Upper Lake (Bhojtal) coordinates...</p>
+        </div>
+
+        <div class="loc-verify-container" id="locFeedbackBox">
+          <div class="loc-warn-banner">
+            <span>⚠️ You are <b>14.41 km</b> away from assigned destination (allowed radius: 2.5 km)</span>
+          </div>
+          <button type="button" class="btn-recheck-gps" id="btnRecheckGps">
+            <span>🔄</span> Re-check GPS
+          </button>
+          <button type="button" class="btn-simulate-gps" id="btnSimulateGps">
+            <span>📍</span> Simulate On-Site GPS (Upper Lake)
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: CAPTURE FRESH GROUND PHOTO (Screenshot 5) -->
+      <div id="modal-step-pane-2" style="display:none;">
+        <div class="step-center-head">
+          <h3>Step 2: 📷 Capture Fresh Ground Photo</h3>
+          <p>Capture a fresh live picture of the destination to verify ground crowd conditions.</p>
+        </div>
+
+        <div class="camera-step-container">
+          <div class="photo-frame-preview" id="photoFrame">
+            <!-- Rendered by reporter.js -->
+          </div>
+
+          <button type="button" class="btn-capture-photo" id="btnCameraAction">
+            <span>📷</span> Capture / Select Fresh Camera Photo
+          </button>
+
+          <input type="file" id="cameraFileInput" accept="image/*" capture="environment" style="display:none;">
+
+          <div class="sample-photo-picker">
+            <span>Preset photos:</span>
+            <button type="button" class="sample-photo-btn" data-src="https://images.unsplash.com/photo-1548013146-72479768bada?w=800&auto=format&fit=crop&q=80">Bhopal Heritage Gate</button>
+            <button type="button" class="sample-photo-btn" data-src="https://images.unsplash.com/photo-1628178125816-8a7e0f803cbe?w=800&auto=format&fit=crop&q=80">Upper Lake Boats</button>
+            <button type="button" class="sample-photo-btn" data-src="https://images.unsplash.com/photo-1575550959106-5a7defe28b56?w=800&auto=format&fit=crop&q=80">Nature Trail</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: DYNAMIC MCQ QUESTIONNAIRE (Screenshot 1) -->
+      <div id="modal-step-pane-3" style="display:none;">
+        <div class="mcq-step-wrap">
+          <div class="mcq-step-header">
+            <h3 class="mcq-step-title"><span>👥</span> Step 3: Dynamic MCQ Ground Questionnaire</h3>
+            <div class="mcq-reporter-pill">
+              <span class="mrp-name" id="mcqRepName">ramesh guide</span>
+              <span class="mrp-badge" id="mcqRepId">Verified Reporter (GV102)</span>
+            </div>
+          </div>
+
+          <!-- Question 1 -->
+          <div class="mcq-question-card" data-q="crowdLevel">
+            <div class="mcq-q-title">1. What is the current crowd level on ground?</div>
+            <div class="mcq-options-row">
+              <button type="button" class="mcq-pill" data-val="Very Low">Very Low</button>
+              <button type="button" class="mcq-pill" data-val="Low">Low</button>
+              <button type="button" class="mcq-pill active" data-val="Moderate">Moderate</button>
+              <button type="button" class="mcq-pill" data-val="High">High</button>
+              <button type="button" class="mcq-pill" data-val="Very High">Very High</button>
+            </div>
+          </div>
+
+          <!-- Question 2 -->
+          <div class="mcq-question-card" data-q="movement">
+            <div class="mcq-q-title">2. How easy is tourist movement inside the site?</div>
+            <div class="mcq-options-row">
+              <button type="button" class="mcq-pill" data-val="Very Easy">Very Easy</button>
+              <button type="button" class="mcq-pill active" data-val="Easy">Easy</button>
+              <button type="button" class="mcq-pill" data-val="Moderate">Moderate</button>
+              <button type="button" class="mcq-pill" data-val="Difficult">Difficult</button>
+              <button type="button" class="mcq-pill" data-val="Very Difficult">Very Difficult</button>
+            </div>
+          </div>
+
+          <!-- Question 3 -->
+          <div class="mcq-question-card" data-q="weather">
+            <div class="mcq-q-title">3. What is the current weather condition at the site?</div>
+            <div class="mcq-options-row">
+              <button type="button" class="mcq-pill active" data-val="Sunny">Sunny</button>
+              <button type="button" class="mcq-pill" data-val="Cloudy">Cloudy</button>
+              <button type="button" class="mcq-pill" data-val="Light Rain">Light Rain</button>
+              <button type="button" class="mcq-pill" data-val="Heavy Rain">Heavy Rain</button>
+              <button type="button" class="mcq-pill" data-val="Windy">Windy</button>
+            </div>
+          </div>
+
+          <!-- Question 4 -->
+          <div class="mcq-question-card" data-q="visiting">
+            <div class="mcq-q-title">5. What is the overall visiting condition right now?</div>
+            <div class="mcq-options-row">
+              <button type="button" class="mcq-pill" data-val="Excellent">Excellent</button>
+              <button type="button" class="mcq-pill active" data-val="Good">Good</button>
+              <button type="button" class="mcq-pill" data-val="Moderate">Moderate</button>
+              <button type="button" class="mcq-pill" data-val="Difficult">Difficult</button>
+              <button type="button" class="mcq-pill" data-val="Avoid for now">Avoid for now</button>
+            </div>
+          </div>
+
+          <!-- Question 5 -->
+          <div class="mcq-question-card" data-q="alerts">
+            <div class="mcq-q-title">6. Are there any unusual conditions or alerts?</div>
+            <div class="mcq-options-row">
+              <button type="button" class="mcq-pill active" data-val="No unusual condition">No unusual condition</button>
+              <button type="button" class="mcq-pill" data-val="Temporary crowd increase">Temporary crowd increase</button>
+              <button type="button" class="mcq-pill" data-val="Event / gathering">Event / gathering</button>
+              <button type="button" class="mcq-pill" data-val="Road / entry issue">Road / entry issue</button>
+              <button type="button" class="mcq-pill" data-val="Weather issue">Weather issue</button>
+              <button type="button" class="mcq-pill" data-val="Other">Other</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- STEP 4: SUBMISSION CONFIRMATION -->
+      <div id="modal-step-pane-4" style="display:none;">
+        <div class="submission-success-wrap">
+          <div class="sub-success-icon">✓</div>
+          <h2>Ground Observation Submitted!</h2>
+          <p>Your real-time observation has passed geofence verification and is immediately reflected in the TouriSense Live Crowd Map.</p>
+          <div class="sub-summary-box" id="subDetailsBox">
+            <!-- Rendered by reporter.js -->
+          </div>
+
+          <button type="button" class="btn-submit-ground" id="btnReturnToPortal" style="margin-top:22px;">
+            Return to Portal
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Foot -->
+    <div class="ground-modal-foot">
+      <button type="button" class="btn-modal-back" id="modalBackBtn" style="visibility:hidden;">
+        ← Back
+      </button>
+      <button type="button" class="btn-modal-next" id="modalNextBtn" disabled>
+        Next Step →
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="wrap footer-inner">
+    <p>TouriSense — SIH prototype. Verified Local Reporter network provides ground-truth observation signals.</p>
+    <p>Observations are location-verified within 2.5 km geofences.</p>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/common.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/reporter.js"></script>
+<script>
+  initNav('reporter');
+</script>
+</body>
+</html>

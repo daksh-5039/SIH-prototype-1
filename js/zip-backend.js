@@ -13,22 +13,27 @@
     if (!nav || document.getElementById('zip-account-tools')) return;
     const tools = document.createElement('div');
     tools.id = 'zip-account-tools'; tools.className = 'zip-account-tools';
-    tools.innerHTML = '<button class="ghost" id="zip-reviews">▶ Reviews</button><button class="ghost" id="zip-profile">Profile</button><button class="ghost" id="zip-auth">Log in</button>';
+    tools.innerHTML = '<button class="ghost" id="zip-reviews">▶ Reviews</button><button class="ghost" id="zip-profile">Profile</button><button class="ghost" id="zip-auth">Log in / Sign in</button>';
     nav.appendChild(tools);
     document.getElementById('zip-reviews').onclick = () => location.href = 'planner.html#reviews';
     document.getElementById('zip-profile').onclick = () => location.href = 'profile.html';
     document.getElementById('zip-auth').onclick = () => {
-      if (signedIn()) { firebase.auth().signOut(); return; }
-      // Keep the account entry point reliable even if Firebase initialization is
-      // still finishing while the page first loads.
+      if (signedIn() || window.rahiApi?.currentReporter?.()) {
+        window.tourisenseReporter?.setActiveReporter(null);
+        localStorage.removeItem('tourisense_user_role');
+        if (window.firebase?.auth?.()) window.firebase.auth().signOut();
+        location.reload();
+        return;
+      }
       const modal = document.getElementById('auth-modal');
       if (modal) modal.classList.add('open');
       else window.rahiApi.requireUser();
     };
     document.addEventListener('rahi-auth-change', event => {
       const user = event.detail?.user;
+      const reporter = event.detail?.reporter;
       const authButton = document.getElementById('zip-auth');
-      if (authButton) authButton.textContent = user ? 'Log out' : 'Log in';
+      if (authButton) authButton.textContent = (user || reporter) ? 'Log out' : 'Log in / Sign in';
     });
     const style = document.createElement('style');
     style.textContent = '.zip-account-tools{display:flex;flex:0 0 auto;gap:3px;align-items:center;margin-left:0}.zip-account-tools .ghost{white-space:nowrap;padding:8px 8px;font-size:12px}@media(max-width:760px){.zip-account-tools{flex:0 0 auto}.zip-account-tools .ghost{padding:8px 7px;font-size:11px}}';

@@ -1,0 +1,17 @@
+[debug] [2026-09-18T18:18:38.477Z] ----------------------------------------------------------------------
+[debug] [2026-09-18T18:18:38.481Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\dwive\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-09-18T18:18:38.482Z] CLI Version:   15.29.0
+[debug] [2026-09-18T18:18:38.482Z] Platform:      win32
+[debug] [2026-09-18T18:18:38.482Z] Node Version:  v25.2.1
+[debug] [2026-09-18T18:18:38.482Z] Detected Agent: unknown
+[debug] [2026-09-18T18:18:38.482Z] Time:          Fri Sep 18 2026 23:48:38 GMT+0530 (India Standard Time)
+[debug] [2026-09-18T18:18:38.482Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-09-18T18:18:40.732Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-09-18T18:18:40.732Z] > authorizing via signed-in user (dwivedidaksh19@gmail.com)
+[debug] [2026-09-18T18:18:40.732Z] [iam] checking project sih-prototype-1-ff6a6 for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-09-18T18:18:40.760Z] Checked if tokens are valid: false, expires at: 1789755810923
+[debug] [2026-09-18T18:18:40.761Z] Checked if tokens are valid: false, expires at: 1789755810923
+[debug] [2026-09-18T18:18:40.762Z] > refreshing access token with scopes: []
+[debug] [2026-09-18T18:18:40.768Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-09-18T18:18:40.769Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
